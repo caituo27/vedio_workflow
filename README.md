@@ -95,6 +95,9 @@ Actions 使用自带的 `GITHUB_TOKEN` 推送修改，无需额外配置。
 - **Gemini 返回格式非 JSON 怎么办？**
   `transcribeWithGemini` 会尝试清理 Markdown 代码块并解析 JSON，如仍失败请在 Actions 日志中查看原始响应并调整提示词。
 
+- **yt-dlp 提示 `Sign in to confirm you're not a bot` 怎么办？**
+  CLI 会自动切换到 Android 客户端参数重试，通常即可通过校验。若 GitHub Actions 仍然失败，可在本地导出浏览器登录态的 `cookies.txt`，将其内容保存为仓库 secret（例如 `YT_DLP_COOKIES`），工作流会在运行时写入临时文件并通过 `YT_DLP_COOKIES_PATH` 提供给 `yt-dlp`。本地调试同样可以手动设置 `YT_DLP_COOKIES_PATH=/path/to/cookies.txt`。
+
 ## 后续改进方向
 
 - 增加缓存策略，避免重复下载同一视频；

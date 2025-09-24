@@ -45,6 +45,15 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
+      - name: Prepare yt-dlp cookies
+        if: ${{ secrets.YT_DLP_COOKIES != '' }}
+        run: |
+          cat <<'EOF' > $RUNNER_TEMP/yt-dlp-cookies.txt
+${{ secrets.YT_DLP_COOKIES }}
+EOF
+          chmod 600 $RUNNER_TEMP/yt-dlp-cookies.txt
+          echo "YT_DLP_COOKIES_PATH=$RUNNER_TEMP/yt-dlp-cookies.txt" >> "$GITHUB_ENV"
+
       - name: Run pipeline
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
