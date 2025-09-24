@@ -5,8 +5,8 @@
       "title": "https://www.bilibili.com/video/BV1v6J1zHErF?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
       "videoUrl": "https://www.bilibili.com/video/BV1v6J1zHErF?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
       "status": "failed",
-      "updatedAt": "2025-09-24T08:20:27.616Z",
-      "error": "命令执行失败: yt-dlp -f bestaudio/best -x --audio-format mp3 --write-info-json --no-progress --output /tmp/tmp-2184-6dlGcD7aGrvo/download.%(ext)s https://www.bilibili.com/video/BV1v6J1zHErF?vd_source=7e8dddae1b6b42f4a7531543f889ccb7 (退出码 1)\nERROR: Postprocessing: ffprobe and ffmpeg not found. Please install or provide the path using --ffmpeg-location\n"
+      "updatedAt": "2025-09-24T08:23:04.220Z",
+      "error": "命令执行失败: yt-dlp -f bestaudio/best -x --audio-format mp3 --write-info-json --no-progress --output /tmp/tmp-2168-WGjyewqIzrUa/download.%(ext)s https://www.bilibili.com/video/BV1v6J1zHErF?vd_source=7e8dddae1b6b42f4a7531543f889ccb7 (退出码 1)\nERROR: Postprocessing: ffprobe and ffmpeg not found. Please install or provide the path using --ffmpeg-location\n"
     }
   }
 }
