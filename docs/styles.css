@@ -509,13 +509,13 @@ body {
 }
 
 .viewer-content p {
-  margin: 0 0 2.4rem;
+  margin: 0 0 3rem;
   text-align: justify;
-  line-height: 2;
+  line-height: 1;
 }
 
 .viewer-content li {
-  line-height: 2;
+  line-height: 1;
 }
 
 .viewer-content p br {
