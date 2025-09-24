@@ -44,11 +44,13 @@ function buildTranscriptLink(transcriptPath) {
     .replace(/^\//, "")
     .replace(/\\/g, "/");
 
-  const target = /^https?:/i.test(transcriptPath)
+  const rawUrl = /^https?:/i.test(transcriptPath)
     ? transcriptPath
     : `${siteInfo.pagesBase}${clean}`;
 
-  return `${siteInfo.pagesBase}viewer.html?src=${encodeURIComponent(target)}`;
+  const viewerUrl = `${siteInfo.pagesBase}viewer.html?src=${encodeURIComponent(rawUrl)}`;
+
+  return { viewerUrl, rawUrl };
 }
 
 async function fetchJobs() {
@@ -156,9 +158,9 @@ function renderJobs(container, jobs) {
   container.innerHTML = entries
     .map((job) => {
       const status = statusLabels[job.status] || job.status;
-      const transcriptUrl = buildTranscriptLink(job.transcriptPath);
-      const link = transcriptUrl
-        ? `<a href="${transcriptUrl}" target="_blank" rel="noreferrer">查看文字稿</a>`
+      const transcriptLink = buildTranscriptLink(job.transcriptPath);
+      const link = transcriptLink
+        ? `<p><a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">查看文字稿</a><br /><small><a href="${transcriptLink.rawUrl}" target="_blank" rel="noreferrer">下载 Markdown</a></small></p>`
         : "";
       const errorMessage = job.error
         ? `<p class="error">错误信息：${job.error}</p>`
@@ -187,9 +189,9 @@ function updateLookupResult(container, job) {
   }
 
   const status = statusLabels[job.status] || job.status;
-  const transcriptUrl = buildTranscriptLink(job.transcriptPath);
-  const link = transcriptUrl
-    ? `<p><a href="${transcriptUrl}" target="_blank" rel="noreferrer">打开文字稿</a></p>`
+  const transcriptLink = buildTranscriptLink(job.transcriptPath);
+  const link = transcriptLink
+    ? `<p><a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">打开文字稿</a> · <a href="${transcriptLink.rawUrl}" target="_blank" rel="noreferrer">下载 Markdown</a></p>`
     : '<p>任务仍在处理中，请稍后刷新页面。</p>';
 
   const errorMessage = job.error ? `<p class="error">错误信息：${job.error}</p>` : "";
