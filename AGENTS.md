@@ -19,8 +19,3 @@ Use `pytest` with fixtures under `tests/fixtures`. Name tests after the feature 
 
 ## Commit & Pull Request Guidelines
 Write commits using imperative mood and the pattern `area: summary` (`pipeline: add retry backoff`). Keep PRs scoped to one change set, include a short checklist of verification steps, and attach screenshots or log snippets for pipeline runs. Link related issues with `Closes #ID` and flag breaking changes in the description. Request reviews from at least one maintainer familiar with the touched pipeline.
-
-## 当前任务
-1. 明确需求与假设：Gemini API 密钥通过 GitHub Secrets 配置；输出按内容分段的中文 Markdown 文字稿（非中文音频需自动翻译为中文）；`src/deliver` 负责 Markdown 生成；GitHub Pages 前端需提供入口，允许用户输入 YouTube 或哔哩哔哩视频链接，并查看任务状态与结果。
-2. 设计 TypeScript 模块：`src/ingest` 负责根据输入链接下载视频并抽取音频；`src/transform` 使用 Gemini 完成转录、翻译与分段；`src/deliver` 输出 Markdown 文件并写入 `docs/`；`src/cli` 负责整体流程编排；GitHub Pages 前端提供链接输入表单并轮询工作流状态。
-3. 搭建基础设施：编写 `README.md` 说明项目结构与工作流程；创建 GitHub Actions 工作流驱动脚本执行（读取 Secrets，更新 Pages 内容）；记录密钥配置方式；确保工作流产出能同步任务状态与最终文字稿到静态站点。
