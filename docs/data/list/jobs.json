@@ -80,6 +80,15 @@
       "status": "completed",
       "updatedAt": "2025-09-24T15:32:12.708Z",
       "author": "弦的AI日记"
+    },
+    "bilibili-bv1ad4y127ge": {
+      "jobId": "bilibili-bv1ad4y127ge",
+      "title": "【高能干货】这个视频将会颠覆你对英语学习的认知——总述·阅读篇",
+      "videoUrl": "https://www.bilibili.com/video/BV1aD4y127GE?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv1ad4y127ge.md",
+      "status": "completed",
+      "updatedAt": "2025-09-24T16:04:07.242Z",
+      "author": "罗肖尼Shawney"
     }
   }
 }
