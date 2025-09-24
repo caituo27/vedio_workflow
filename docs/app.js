@@ -28,18 +28,31 @@ function slugify(input) {
     .replace(/-{2,}/g, "-");
 }
 
+function extractUrlCandidate(value) {
+  const match = value.match(/https?:\/\/[^\s]+/i);
+  return match ? match[0] : null;
+}
+
+function extractBilibiliId(value) {
+  const match = value.match(/BV[0-9A-Za-z]+/i);
+  return match ? match[0] : null;
+}
+
 function normaliseInput(value) {
   const trimmed = value.trim();
-  const isBiliId = /^(bv|BV)[0-9A-Za-z]+$/.test(trimmed);
+  const candidateUrl = extractUrlCandidate(trimmed);
+  const target = candidateUrl ?? trimmed;
+
+  const isBiliId = /^(bv|BV)[0-9A-Za-z]+$/.test(target);
   if (isBiliId) {
     return {
-      jobId: slugify(`bilibili-${trimmed}`),
-      display: `https://www.bilibili.com/video/${trimmed}`,
+      jobId: slugify(`bilibili-${target}`),
+      display: `https://www.bilibili.com/video/${target}`,
     };
   }
 
-  if (/youtube\.com|youtu\.be/.test(trimmed)) {
-    const url = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
+  if (/youtube\.com|youtu\.be/.test(target)) {
+    const url = target.startsWith("http") ? target : `https://${target}`;
     try {
       const parsed = new URL(url);
       let id = parsed.searchParams.get("v");
@@ -59,8 +72,8 @@ function normaliseInput(value) {
     }
   }
 
-  if (/bilibili\.com/.test(trimmed)) {
-    const url = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
+  if (/bilibili\.com/.test(target)) {
+    const url = target.startsWith("http") ? target : `https://${target}`;
     try {
       const parsed = new URL(url);
       const match = parsed.pathname.match(/BV[0-9A-Za-z]+/i);
@@ -75,6 +88,14 @@ function normaliseInput(value) {
       console.error(error);
       return null;
     }
+  }
+
+  const embeddedBiliId = extractBilibiliId(trimmed);
+  if (embeddedBiliId) {
+    return {
+      jobId: slugify(`bilibili-${embeddedBiliId}`),
+      display: `https://www.bilibili.com/video/${embeddedBiliId}`,
+    };
   }
 
   return null;

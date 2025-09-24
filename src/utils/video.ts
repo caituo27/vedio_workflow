@@ -10,12 +10,25 @@ export type VideoSource = {
 const YOUTUBE_URL_REGEX = /^(https?:\/\/)?(www\.|m\.)?(youtube\.com|youtu\.be)\//i;
 const BILIBILI_ID_REGEX = /^(BV|bv)[0-9A-Za-z]+$/;
 const BILIBILI_URL_REGEX = /^(https?:\/\/)?(www\.|m\.)?bilibili\.com\//i;
+const URL_IN_TEXT_REGEX = /(https?:\/\/[^\s]+)/i;
+
+function extractUrlCandidate(value: string): string | null {
+    const match = value.match(URL_IN_TEXT_REGEX);
+    return match ? match[0] : null;
+}
+
+function extractBilibiliIdFromText(value: string): string | null {
+    const match = value.match(/BV[0-9A-Za-z]+/i);
+    return match ? match[0] : null;
+}
 
 export function parseVideoSource(input: string): VideoSource {
-    const trimmed = input.trim();
+    const trimmedInput = input.trim();
+    const candidateUrl = extractUrlCandidate(trimmedInput);
+    const target = candidateUrl ?? trimmedInput;
 
-    if (YOUTUBE_URL_REGEX.test(trimmed)) {
-        const url = normaliseUrl(trimmed, "youtube");
+    if (YOUTUBE_URL_REGEX.test(target)) {
+        const url = normaliseUrl(target, "youtube");
         return {
             originalInput: input,
             videoUrl: url,
@@ -24,8 +37,8 @@ export function parseVideoSource(input: string): VideoSource {
         };
     }
 
-    if (BILIBILI_URL_REGEX.test(trimmed)) {
-        const url = normaliseUrl(trimmed, "bilibili");
+    if (BILIBILI_URL_REGEX.test(target)) {
+        const url = normaliseUrl(target, "bilibili");
         return {
             originalInput: input,
             videoUrl: url,
@@ -34,13 +47,23 @@ export function parseVideoSource(input: string): VideoSource {
         };
     }
 
-    if (BILIBILI_ID_REGEX.test(trimmed)) {
-        const id = trimmed;
+    if (BILIBILI_ID_REGEX.test(target)) {
+        const id = target;
         return {
             originalInput: input,
             videoUrl: `https://www.bilibili.com/video/${id}`,
             provider: "bilibili",
             id,
+        };
+    }
+
+    const embeddedBiliId = extractBilibiliIdFromText(trimmedInput);
+    if (embeddedBiliId) {
+        return {
+            originalInput: input,
+            videoUrl: `https://www.bilibili.com/video/${embeddedBiliId}`,
+            provider: "bilibili",
+            id: embeddedBiliId,
         };
     }
 
