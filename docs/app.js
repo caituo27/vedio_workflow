@@ -17,11 +17,12 @@ function buildTranscriptLink(transcriptPath) {
     .replace(/^docs\//i, "")
     .replace(/^\.\//, "")
     .replace(/^\//, "");
+  const relative = clean.startsWith("./") ? clean : `./${clean}`;
   try {
-    return new URL(clean, window.location.href).toString();
+    return new URL(relative, window.location.href).toString();
   } catch (error) {
     console.error("链接解析失败", error);
-    return `./${clean}`;
+    return relative;
   }
 }
 
