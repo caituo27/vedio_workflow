@@ -47,11 +47,11 @@ jobs:
 
       - name: Prepare yt-dlp cookies
         if: ${{ secrets.YT_DLP_COOKIES != '' }}
+        env:
+          YT_DLP_COOKIES: ${{ secrets.YT_DLP_COOKIES }}
         run: |
-          cat <<'EOF' > $RUNNER_TEMP/yt-dlp-cookies.txt
-${{ secrets.YT_DLP_COOKIES }}
-EOF
-          chmod 600 $RUNNER_TEMP/yt-dlp-cookies.txt
+          printf '%s' "$YT_DLP_COOKIES" > "$RUNNER_TEMP/yt-dlp-cookies.txt"
+          chmod 600 "$RUNNER_TEMP/yt-dlp-cookies.txt"
           echo "YT_DLP_COOKIES_PATH=$RUNNER_TEMP/yt-dlp-cookies.txt" >> "$GITHUB_ENV"
 
       - name: Run pipeline
