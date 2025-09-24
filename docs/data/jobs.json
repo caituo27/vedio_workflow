@@ -15,6 +15,14 @@
       "transcriptPath": "docs/transcripts/bilibili-bv1ejpwzteah.md",
       "status": "completed",
       "updatedAt": "2025-09-24T08:29:34.975Z"
+    },
+    "bilibili-bv1c4hdzpebq": {
+      "jobId": "bilibili-bv1c4hdzpebq",
+      "title": "别得病",
+      "videoUrl": "https://www.bilibili.com/video/BV1C4HDzpEbQ?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "transcripts/bilibili-bv1c4hdzpebq.md",
+      "status": "completed",
+      "updatedAt": "2025-09-24T08:48:41.035Z"
     }
   }
 }
