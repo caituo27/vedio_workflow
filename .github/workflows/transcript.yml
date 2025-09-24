@@ -46,13 +46,16 @@ jobs:
         run: npm run build
 
       - name: Prepare yt-dlp cookies
-        if: ${{ secrets.YT_DLP_COOKIES != '' }}
         env:
           YT_DLP_COOKIES: ${{ secrets.YT_DLP_COOKIES }}
         run: |
-          printf '%s' "$YT_DLP_COOKIES" > "$RUNNER_TEMP/yt-dlp-cookies.txt"
-          chmod 600 "$RUNNER_TEMP/yt-dlp-cookies.txt"
-          echo "YT_DLP_COOKIES_PATH=$RUNNER_TEMP/yt-dlp-cookies.txt" >> "$GITHUB_ENV"
+          if [ -n "$YT_DLP_COOKIES" ]; then
+            printf '%s' "$YT_DLP_COOKIES" > "$RUNNER_TEMP/yt-dlp-cookies.txt"
+            chmod 600 "$RUNNER_TEMP/yt-dlp-cookies.txt"
+            echo "YT_DLP_COOKIES_PATH=$RUNNER_TEMP/yt-dlp-cookies.txt" >> "$GITHUB_ENV"
+          else
+            echo "No yt-dlp cookies secret provided"
+          fi
 
       - name: Run pipeline
         env:
