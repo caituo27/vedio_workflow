@@ -7,16 +7,40 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body class="viewer">
-    <main class="viewer-container">
-      <header class="viewer-header">
-        <div>
-          <a class="viewer-back" href="./index.html">← 返回首页</a>
-          <p id="viewer-meta" class="viewer-meta"></p>
+    <div class="viewer-shell" data-theme="light">
+      <header class="viewer-topbar">
+        <a class="viewer-logo" href="./index.html" aria-label="返回首页">
+          <span class="viewer-logo-mark">VW</span>
+          <span class="viewer-logo-text">vedio workflow</span>
+        </a>
+        <div class="viewer-actions">
+          <button id="theme-toggle" class="viewer-action" type="button" aria-label="切换主题">🌙</button>
+          <button id="copy-link" class="viewer-action" type="button">复制链接</button>
+          <a id="open-source" class="viewer-action" target="_blank" rel="noreferrer">原始 Markdown</a>
         </div>
       </header>
-      <section id="viewer-status" class="viewer-status">加载中…</section>
-      <article id="viewer-content" class="viewer-content" hidden></article>
-    </main>
+
+      <div class="viewer-progress-track">
+        <div id="progress-bar" class="viewer-progress-bar"></div>
+      </div>
+
+      <main class="viewer-main">
+        <aside class="viewer-thread-meta">
+          <p class="viewer-thread-label">阅读进度</p>
+          <p id="progress-value" class="viewer-thread-progress">0%</p>
+        </aside>
+
+        <section class="viewer-thread">
+          <header class="viewer-thread-header">
+            <h1 id="viewer-title" class="viewer-thread-title">文字稿</h1>
+            <div id="viewer-meta" class="viewer-thread-info"></div>
+          </header>
+
+          <section id="viewer-status" class="viewer-thread-status">加载中…</section>
+          <article id="viewer-content" class="viewer-thread-content" hidden></article>
+        </section>
+      </main>
+    </div>
     <script type="module" src="./viewer.js"></script>
   </body>
 </html>
