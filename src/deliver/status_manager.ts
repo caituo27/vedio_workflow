@@ -20,6 +20,15 @@ export type JobIndex = {
 
 const STATUS_FILE = path.resolve("docs/data/jobs.json");
 
+function sanitiseTranscriptPath(transcriptPath: string): string {
+    const normalised = transcriptPath
+        .replace(/^docs\//i, "")
+        .replace(/^\.\//, "")
+        .replace(/^\//, "")
+        .replace(/\\/g, "/");
+    return normalised;
+}
+
 async function loadIndex(): Promise<JobIndex> {
     const data = await readJsonFile<JobIndex>(STATUS_FILE);
     if (data) {
@@ -59,11 +68,12 @@ export async function markCompleted(
     jobId: string,
     details: { title: string; videoUrl: string; transcriptPath: string },
 ): Promise<JobRecord> {
+    const transcriptPath = sanitiseTranscriptPath(details.transcriptPath);
     const record: JobRecord = {
         jobId,
         title: details.title,
         videoUrl: details.videoUrl,
-        transcriptPath: details.transcriptPath,
+        transcriptPath,
         status: "completed",
         updatedAt: new Date().toISOString(),
     };
