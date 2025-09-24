@@ -13,10 +13,17 @@
           <span class="viewer-logo-mark">VW</span>
           <span class="viewer-logo-text">vedio workflow</span>
         </a>
-        <div class="viewer-actions">
-          <button id="theme-toggle" class="viewer-action" type="button" aria-label="切换主题">🌙</button>
-          <button id="copy-link" class="viewer-action" type="button">复制链接</button>
-          <a id="open-source" class="viewer-action" target="_blank" rel="noreferrer">原始 Markdown</a>
+        <div class="viewer-topbar-controls">
+          <button
+            id="actions-toggle"
+            class="viewer-action viewer-menu-toggle"
+            type="button"
+            aria-label="展开操作菜单"
+            aria-expanded="false"
+          >☰</button>
+          <div class="viewer-actions" id="viewer-actions">
+            <button id="theme-toggle" class="viewer-action" type="button" aria-label="切换主题">🌙</button>
+          </div>
         </div>
       </header>
 

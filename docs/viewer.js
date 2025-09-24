@@ -6,10 +6,10 @@ const metaEl = document.getElementById("viewer-meta");
 const titleEl = document.getElementById("viewer-title");
 const shellEl = document.querySelector(".viewer-shell");
 const themeToggleBtn = document.getElementById("theme-toggle");
-const copyLinkBtn = document.getElementById("copy-link");
-const openSourceLink = document.getElementById("open-source");
 const progressBar = document.getElementById("progress-bar");
 const progressValue = document.getElementById("progress-value");
+const actionsToggleBtn = document.getElementById("actions-toggle");
+const actionsContainer = document.getElementById("viewer-actions");
 
 const THEME_STORAGE_KEY = "vw-viewer-theme";
 let articleTop = 0;
@@ -33,19 +33,28 @@ const srcParam = params.get("src");
   }
 })();
 
-if (copyLinkBtn) {
-  copyLinkBtn.addEventListener("click", async () => {
-    const originalLabel = copyLinkBtn.textContent;
-    try {
-      const copied = await copyText(window.location.href);
-      copyLinkBtn.textContent = copied ? "已复制" : "复制失败";
-    } catch (error) {
-      console.error(error);
-      copyLinkBtn.textContent = "复制失败";
-    } finally {
-      setTimeout(() => {
-        copyLinkBtn.textContent = originalLabel;
-      }, 1800);
+if (actionsToggleBtn && actionsContainer) {
+  actionsToggleBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isOpen = actionsContainer.classList.toggle("is-open");
+    actionsToggleBtn.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!actionsContainer.classList.contains("is-open")) {
+      return;
+    }
+    if (event.target instanceof Node && (actionsContainer.contains(event.target) || actionsToggleBtn.contains(event.target))) {
+      return;
+    }
+    actionsContainer.classList.remove("is-open");
+    actionsToggleBtn.setAttribute("aria-expanded", "false");
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 768 && actionsContainer.classList.contains("is-open")) {
+      actionsContainer.classList.remove("is-open");
+      actionsToggleBtn.setAttribute("aria-expanded", "false");
     }
   });
 }
@@ -93,13 +102,10 @@ function renderMarkdown(markdown, sourceUrl) {
     titleEl.textContent = displayTitle;
   }
 
-  if (openSourceLink) {
-    openSourceLink.href = sourceUrl;
-  }
-
   if (metaEl) {
-    if (metaItems.length) {
-      metaEl.innerHTML = metaItems.map((item) => `<span>${marked.parseInline(item)}</span>`).join("");
+    const metaFragments = buildMetaItems(metaItems, sourceUrl);
+    if (metaFragments.length) {
+      metaEl.innerHTML = metaFragments.map((item) => `<span>${marked.parseInline(item)}</span>`).join("");
     } else {
       metaEl.innerHTML = "";
     }
@@ -160,27 +166,43 @@ function resolveSource(src) {
 }
 
 function splitMarkdown(markdown) {
-  const lines = markdown.split(/\r?\n/);
-  let index = 0;
+  let remaining = markdown;
   let title = null;
 
-  if (lines[index] && /^#\s+/.test(lines[index])) {
-    title = lines[index].replace(/^#\s+/, "").trim();
-    index += 1;
+  const titleMatch = remaining.match(/^#\s+(.+?)\s*(?:\r?\n|$)/);
+  if (titleMatch) {
+    title = titleMatch[1].trim();
+    remaining = remaining.slice(titleMatch[0].length);
   }
 
-  while (index < lines.length && lines[index].trim() === "") {
-    index += 1;
+  const metaMatch = remaining.match(/^(?:-\s+.*(?:\r?\n|$))+\s*/);
+  let metaItems = [];
+  if (metaMatch) {
+    const metaBlock = metaMatch[0];
+    metaItems = metaBlock
+      .split(/\r?\n/)
+      .map((line) => line.replace(/^-\s+/, "").trim())
+      .filter(Boolean);
+    remaining = remaining.slice(metaBlock.length);
   }
 
-  const metaItems = [];
-  while (index < lines.length && /^-\s+/.test(lines[index])) {
-    metaItems.push(lines[index].replace(/^-\s+/, "").trim());
-    index += 1;
+  return { title, metaItems, body: remaining };
+}
+
+function buildMetaItems(metaItems, sourceUrl) {
+  const filtered = metaItems.filter((item) => !/^原始语言/i.test(item));
+
+  const result = [...filtered];
+  const videoIndex = result.findIndex((item) => /^视频链接/i.test(item));
+  const sourceLabel = `原始文本：[点击查看](${sourceUrl})`;
+
+  if (videoIndex !== -1) {
+    result.splice(videoIndex + 1, 0, sourceLabel);
+  } else {
+    result.push(sourceLabel);
   }
 
-  const body = lines.slice(index).join("\n");
-  return { title, metaItems, body };
+  return result;
 }
 
 function enhanceParagraphs() {

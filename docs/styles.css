@@ -447,7 +447,10 @@ body {
 
 .viewer {
   min-height: 100vh;
-  background: #f5f7fa;
+  background:
+    radial-gradient(160% 140% at 20% 0%, rgba(29, 155, 240, 0.12), transparent 55%),
+    radial-gradient(120% 180% at 80% 10%, rgba(96, 56, 255, 0.1), transparent 65%),
+    #f5f7fa;
   color: #0f1419;
   font-family: "Inter", "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -501,8 +504,15 @@ body {
   color: rgba(15, 35, 95, 0.67);
 }
 
-.viewer-actions {
+.viewer-topbar-controls {
   display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.viewer-actions {
+  display: inline-flex;
   align-items: center;
   gap: 0.75rem;
 }
@@ -518,6 +528,17 @@ body {
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.2s ease;
   text-decoration: none;
+}
+
+.viewer-menu-toggle {
+  display: none;
+  min-width: 2.4rem;
+  padding: 0.5rem;
+  justify-content: center;
+}
+
+.viewer-actions.is-open {
+  display: flex;
 }
 
 .viewer-action:hover {
@@ -624,7 +645,7 @@ body {
 
 .viewer-thread-content {
   font-size: 1.125rem;
-  line-height: 1.6;
+  line-height: 1.65;
   color: #0f1419;
 }
 
@@ -633,11 +654,16 @@ body {
 .viewer-thread-content ol,
 .viewer-thread-content blockquote,
 .viewer-thread-content pre {
-  margin: 0 0 1.5rem;
+  margin: 0 0 1.65rem;
+}
+
+.viewer-thread-content p + p {
+  margin-top: 1.65rem;
 }
 
 .viewer-thread-content li {
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.6;
 }
 
 .viewer-thread-content p:last-child,
@@ -780,9 +806,36 @@ body {
     padding: 0.85rem 1.25rem;
   }
 
+  .viewer-topbar-controls {
+    gap: 0.5rem;
+  }
+
+  .viewer-actions {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 9rem;
+    padding: 0.75rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(15, 35, 95, 0.1);
+    box-shadow: 0 18px 38px rgba(15, 35, 95, 0.16);
+    display: none;
+  }
+
+  .viewer-actions.is-open {
+    display: flex;
+  }
+
   .viewer-action {
-    padding: 0.45rem 0.85rem;
-    font-size: 0.8rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .viewer-menu-toggle {
+    display: inline-flex;
   }
 
   .viewer-main {
@@ -792,7 +845,7 @@ body {
   }
 
   .viewer-thread {
-    padding: 1.75rem 1.6rem 2.5rem;
+    padding: 1.85rem 1.55rem 2.4rem;
   }
 
   .viewer-thread-content {
