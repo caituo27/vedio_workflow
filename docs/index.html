@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>视频文字稿生成器</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>视频文字稿生成器</h1>
+        <p>
+          输入 YouTube 链接或哔哩哔哩 BV 号，查看任务状态并浏览自动生成的中文文字稿。
+        </p>
+      </header>
+
+      <section class="panel">
+        <h2>查询任务</h2>
+        <form id="lookup-form">
+          <label for="video-input">视频链接或 BV 号</label>
+          <div class="form-row">
+            <input id="video-input" type="text" placeholder="例如：https://youtu.be/xxxx 或 BV1xx411c7mD" required />
+            <button type="submit">查询</button>
+          </div>
+        </form>
+        <div id="lookup-result" class="lookup-result" hidden></div>
+        <p class="hint">
+          新任务需要在 <a id="workflow-link" href="#" target="_blank" rel="noreferrer">GitHub Actions</a>
+          中手动触发，选择“Run workflow”并填写视频链接后即可。工作流会自动将状态与文字稿同步至本页面。
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2>任务列表</h2>
+        <div id="jobs" class="jobs"></div>
+      </section>
+    </main>
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>
