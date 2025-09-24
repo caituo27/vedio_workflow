@@ -62,6 +62,15 @@
       "status": "completed",
       "updatedAt": "2025-09-24T14:55:25.711Z",
       "author": "稀有歷史資料大全庫 ©【舊金山文華國際傳媒】"
+    },
+    "bilibili-bv1gzpmzbe75": {
+      "jobId": "bilibili-bv1gzpmzbe75",
+      "title": "豆包Agent很可能要干掉Manus了……",
+      "videoUrl": "https://www.bilibili.com/video/BV1gZpmzbE75?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv1gzpmzbe75.md",
+      "status": "completed",
+      "updatedAt": "2025-09-24T15:15:28.144Z",
+      "author": "栗噔噔"
     }
   }
 }
