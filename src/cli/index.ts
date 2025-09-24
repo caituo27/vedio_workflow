@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import path from "node:path";
+import { promises as fs } from "node:fs";
 import { parseVideoSource, buildJobId } from "../utils/video.js";
 import { success, error as logError } from "../utils/logger.js";
 import { downloadAudio } from "../ingest/downloader.js";
 import { transcribeWithGemini } from "../transform/gemini_transcriber.js";
 import { deliverMarkdown } from "../deliver/markdown_writer.js";
 import { markProcessing, markCompleted, markFailed } from "../deliver/status_manager.js";
-import { promises as fs } from "node:fs";
 
 export type PipelineOptions = {
     apiKey?: string;
@@ -48,11 +49,12 @@ export async function runPipeline(videoInput: string, options: PipelineOptions):
         }
 
         const { markdownPath } = await deliverMarkdown(transcript, deliverOptions);
+        const relativeTranscriptPath = path.relative(path.resolve("docs"), markdownPath);
 
         await markCompleted(jobId, {
             title: downloadResult.title,
             videoUrl: source.videoUrl,
-            transcriptPath: markdownPath.replace(process.cwd(), "").replace(/^\//, ""),
+            transcriptPath: relativeTranscriptPath.replace(/\\/g, "/"),
         });
 
         success(`任务完成，文字稿已生成: ${markdownPath}`);

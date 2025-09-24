@@ -6,6 +6,20 @@ const statusLabels = {
   failed: "失败",
 };
 
+function buildTranscriptLink(transcriptPath) {
+  if (!transcriptPath) {
+    return null;
+  }
+  if (/^https?:/i.test(transcriptPath)) {
+    return transcriptPath;
+  }
+  const clean = transcriptPath
+    .replace(/^docs\//i, "")
+    .replace(/^\.\//, "")
+    .replace(/^\//, "");
+  return `./${clean}`;
+}
+
 async function fetchJobs() {
   try {
     const response = await fetch(`${JOBS_ENDPOINT}?cache=${Date.now()}`);
@@ -111,8 +125,9 @@ function renderJobs(container, jobs) {
   container.innerHTML = entries
     .map((job) => {
       const status = statusLabels[job.status] || job.status;
-      const link = job.transcriptPath
-        ? `<a href="../${job.transcriptPath}" target="_blank" rel="noreferrer">查看文字稿</a>`
+      const transcriptUrl = buildTranscriptLink(job.transcriptPath);
+      const link = transcriptUrl
+        ? `<a href="${transcriptUrl}" target="_blank" rel="noreferrer">查看文字稿</a>`
         : "";
       const errorMessage = job.error
         ? `<p class="error">错误信息：${job.error}</p>`
@@ -139,8 +154,9 @@ function updateLookupResult(container, job) {
   }
 
   const status = statusLabels[job.status] || job.status;
-  const link = job.transcriptPath
-    ? `<p><a href="../${job.transcriptPath}" target="_blank" rel="noreferrer">打开文字稿</a></p>`
+  const transcriptUrl = buildTranscriptLink(job.transcriptPath);
+  const link = transcriptUrl
+    ? `<p><a href="${transcriptUrl}" target="_blank" rel="noreferrer">打开文字稿</a></p>`
     : '<p>任务仍在处理中，请稍后刷新页面。</p>';
 
   const errorMessage = job.error ? `<p class="error">错误信息：${job.error}</p>` : "";
