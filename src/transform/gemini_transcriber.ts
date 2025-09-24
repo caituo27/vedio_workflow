@@ -59,7 +59,7 @@ export async function transcribeWithGemini(
     const prompt = [
         "你将获得一段视频音频文件。",
         "1. 首先识别音频内容，若原音频不是中文，请将内容翻译为中文。",
-        "2. 按照语义分段，每个段落提供 JSON 对象包含 index、text 字段，可选 start/end (mm:ss)。",
+        "2. 按照语义在合适的位置分段，使读者阅读更顺畅、易于理解；每个段落提供 JSON 对象包含 index、text 字段，可选 start/end (mm:ss)。",
         "3. 返回格式为 JSON：{ \"language\": 原音语言, \"segments\": [{ \"index\": 1, \"text\": \"...\", \"start\": \"00:00\", \"end\": \"00:30\" }] }",
         "4. 所有文本使用简体中文。",
     ].join("\n");
