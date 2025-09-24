@@ -6,6 +6,34 @@ const statusLabels = {
   failed: "失败",
 };
 
+const siteInfo = detectSiteInfo();
+
+function detectSiteInfo() {
+  const { origin, pathname } = window.location;
+  const segments = pathname.split("/").filter(Boolean);
+  const info = {
+    owner: "USERNAME",
+    repo: "vedio_workflow",
+    pagesBase: `${origin.replace(/\/$/, "")}/`,
+  };
+
+  const hostMatch = origin.match(/^https:\/\/([^\.]+)\.github\.io/i);
+
+  if (hostMatch) {
+    info.owner = hostMatch[1];
+    if (segments.length >= 1) {
+      info.repo = segments[0];
+      info.pagesBase = `${origin.replace(/\/$/, "")}/${info.repo}/`;
+    }
+  } else if (segments.length >= 2) {
+    info.owner = segments[0];
+    info.repo = segments[1];
+    info.pagesBase = `${origin.replace(/\/$/, "")}/${segments[0]}/${segments[1]}/`;
+  }
+
+  return info;
+}
+
 function buildTranscriptLink(transcriptPath) {
   if (!transcriptPath) {
     return null;
@@ -17,12 +45,12 @@ function buildTranscriptLink(transcriptPath) {
     .replace(/^docs\//i, "")
     .replace(/^\.\//, "")
     .replace(/^\//, "");
-  const relative = clean.startsWith("./") ? clean : `./${clean}`;
   try {
-    return new URL(relative, window.location.href).toString();
+    const absolute = new URL(clean, siteInfo.pagesBase).toString();
+    return absolute;
   } catch (error) {
     console.error("链接解析失败", error);
-    return relative;
+    return `${siteInfo.pagesBase}${clean}`;
   }
 }
 
@@ -179,11 +207,7 @@ function updateLookupResult(container, job) {
 function setupWorkflowLink() {
   const link = document.getElementById("workflow-link");
   if (!link) return;
-  const { origin, pathname } = window.location;
-  const segments = pathname.split("/").filter(Boolean);
-  const repo = segments.length ? segments[0] : "vedio-workflow";
-  const owner = origin.includes("github.io") ? origin.split("//")[1].split(".")[0] : "USERNAME";
-  link.href = `https://github.com/${owner}/${repo}/actions/workflows/transcript.yml`;
+  link.href = `https://github.com/${siteInfo.owner}/${siteInfo.repo}/actions/workflows/transcript.yml`;
 }
 
 async function bootstrap() {
