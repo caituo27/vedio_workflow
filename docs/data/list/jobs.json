@@ -71,6 +71,15 @@
       "status": "completed",
       "updatedAt": "2025-09-24T15:15:28.144Z",
       "author": "栗噔噔"
+    },
+    "bilibili-bv15zhszzed3": {
+      "jobId": "bilibili-bv15zhszzed3",
+      "title": "不懂设计，用 Cursor + Figma MCP 做页面的三步法",
+      "videoUrl": "https://www.bilibili.com/video/BV15zhSzZEd3?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv15zhszzed3.md",
+      "status": "completed",
+      "updatedAt": "2025-09-24T15:32:12.708Z",
+      "author": "弦的AI日记"
     }
   }
 }
