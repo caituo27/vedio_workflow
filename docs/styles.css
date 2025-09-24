@@ -518,6 +518,11 @@ body {
   line-height: 2;
 }
 
+.viewer-content p br {
+  display: block;
+  margin-bottom: 1.4rem;
+}
+
 .viewer-content p:last-child {
   margin-bottom: 0;
 }
