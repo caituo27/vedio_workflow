@@ -511,6 +511,11 @@ body {
 .viewer-content p {
   margin: 0 0 1.4rem;
   text-align: justify;
+  line-height: 2;
+}
+
+.viewer-content li {
+  line-height: 2;
 }
 
 .viewer-content p:last-child {
