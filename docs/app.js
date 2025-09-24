@@ -205,10 +205,11 @@ function renderJobs(container, jobs) {
       const transcriptLink = buildTranscriptLink(job.transcriptPath);
       const author = job.author || "未知";
       const jobActions = transcriptLink
-        ? [
-            `<a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">查看文字稿</a>`,
-            `<a href="${transcriptLink.rawUrl}" target="_blank" rel="noreferrer">下载 Markdown</a>`,
-          ].join("")
+        ? `
+            <a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">查看文字稿</a>
+            <span class="job-action-divider">·</span>
+            <a href="${transcriptLink.rawUrl}" target="_blank" rel="noreferrer">下载 Markdown</a>
+          `
         : '<span class="pending-hint">任务仍在处理中</span>';
       const errorMessage = job.error
         ? `<p class="job-error">错误信息：${job.error}</p>`
