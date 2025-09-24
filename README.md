@@ -34,7 +34,8 @@
 ## 运行前准备
 
 1. **Gemini API Key**：前往 Google AI Studio 获取 API Key。
-2. **yt-dlp**：用于极速下载音视频，GitHub Actions 会自动安装。若本地调试请确保 `yt-dlp` 可用（`pip install yt-dlp`）。
+2. **ffmpeg 套件**：`yt-dlp` 需要依赖 `ffmpeg/ffprobe` 做格式转换。GitHub Actions 会自动通过 `apt-get install ffmpeg` 安装，本地调试请确保 `ffmpeg` 在 PATH 中。
+3. **yt-dlp**：用于极速下载音视频，GitHub Actions 会自动安装。若本地调试请确保 `yt-dlp` 可用（`pip install yt-dlp`）。
 
 ## 本地开发
 
