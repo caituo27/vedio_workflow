@@ -2,7 +2,6 @@ import { marked } from "https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.es
 
 const statusEl = document.getElementById("viewer-status");
 const contentEl = document.getElementById("viewer-content");
-const titleEl = document.getElementById("viewer-title");
 const metaEl = document.getElementById("viewer-meta");
 
 const siteInfo = detectSiteInfo();
@@ -39,7 +38,6 @@ function renderMarkdown(markdown, sourceUrl) {
   const headingMatch = markdown.match(/^#\s+(.+)$/m);
   const displayTitle = headingMatch ? headingMatch[1].trim() : "文字稿";
 
-  titleEl.textContent = displayTitle;
   document.title = `${displayTitle} · 文字稿`;
 
   const html = marked.parse(markdown, { mangle: false, headerIds: false });

@@ -9,24 +9,27 @@ export type DeliverOptions = {
     videoUrl: string;
     title: string;
     outputDir?: string;
+    author?: string;
 };
 
-function formatSegment(segment: { index: number; start?: string; end?: string; text: string }): string {
-    const timing = [segment.start, segment.end].filter(Boolean).join(" - ");
-    const header = timing ? `### 第${segment.index}段 (${timing})` : `### 第${segment.index}段`;
-    return [`${header}`, "", segment.text.trim()].join("\n");
+function formatSegment(segment: { text: string }): string {
+    return segment.text.trim();
+}
+
+function formatTimestamp(date: Date): string {
+    const pad = (value: number) => value.toString().padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 function buildMarkdown(options: DeliverOptions, transcript: TranscriptResult): string {
-    const createdAt = new Date().toISOString();
+    const createdAt = formatTimestamp(new Date());
     const lines = [
         `# ${options.title || "未命名视频"}`,
         "",
         `- 视频链接: [点击查看](${options.videoUrl})`,
+        options.author ? `- 视频作者: ${options.author}` : undefined,
         `- 原始语言: ${transcript.language}`,
         `- 生成时间: ${createdAt}`,
-        "",
-        "## 文字稿",
         "",
         ...transcript.segments.map(formatSegment),
         "",
@@ -36,7 +39,7 @@ function buildMarkdown(options: DeliverOptions, transcript: TranscriptResult): s
         "",
     ];
 
-    return lines.join("\n");
+    return lines.filter((line) => line !== undefined).join("\n");
 }
 
 async function writeMarkdownFile(filePath: string, content: string): Promise<void> {

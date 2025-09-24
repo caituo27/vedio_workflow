@@ -64,6 +64,7 @@ export async function runPipeline(videoInput: string, options: PipelineOptions):
             title: string;
             videoUrl: string;
             outputDir?: string;
+            author?: string;
         } = {
             jobId,
             title: downloadResult.title,
@@ -71,6 +72,9 @@ export async function runPipeline(videoInput: string, options: PipelineOptions):
         };
         if (options.output) {
             deliverOptions.outputDir = options.output;
+        }
+        if (downloadResult.author) {
+            deliverOptions.author = downloadResult.author;
         }
 
         const { markdownPath } = await deliverMarkdown(transcript, deliverOptions);
