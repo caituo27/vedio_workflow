@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { jsonrepair } from "jsonrepair";
 import { info } from "../utils/logger.js";
 
 export type TranscriptSegment = {
@@ -54,7 +55,7 @@ export async function transcribeWithGemini(
     const mimeType = detectMimeType(audioPath);
 
     const client = new GoogleGenerativeAI(apiKey);
-    const model = client.getGenerativeModel({ model: "models/gemini-2.5-flash-lite" });
+    const model = client.getGenerativeModel({ model: "models/gemini-2.5-flash" });
 
     const prompt = [
         "你将获得一段视频音频文件。",
@@ -92,7 +93,15 @@ export async function transcribeWithGemini(
     try {
         parsed = JSON.parse(jsonText) as TranscriptResult;
     } catch (error) {
-        throw new Error(`解析 Gemini 返回结果失败: ${(error as Error).message}\n原始响应: ${responseText}`);
+        try {
+            const repaired = jsonrepair(jsonText);
+            parsed = JSON.parse(repaired) as TranscriptResult;
+        } catch (repairError) {
+            const reason = (repairError as Error).message || (error as Error).message;
+            throw new Error(
+                `解析 Gemini 返回结果失败: ${reason}\n原始响应: ${responseText}`,
+            );
+        }
     }
 
     const segments = (parsed.segments ?? []).map((segment, index) => {
