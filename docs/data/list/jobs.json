@@ -26,6 +26,15 @@
       "status": "completed",
       "updatedAt": "2025-09-24T09:25:24.013Z",
       "author": "金字猫塔"
+    },
+    "bilibili-bv1gkjczgexr": {
+      "jobId": "bilibili-bv1gkjczgexr",
+      "title": "文科大败局，是因为文科本就不符合雇佣逻辑。",
+      "videoUrl": "https://www.bilibili.com/video/BV1gkJCzGEXr?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv1gkjczgexr.md",
+      "status": "completed",
+      "updatedAt": "2025-09-24T09:43:18.253Z",
+      "author": "故乡的野菜_"
     }
   }
 }
