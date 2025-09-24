@@ -35,6 +35,15 @@
       "status": "completed",
       "updatedAt": "2025-09-24T09:43:18.253Z",
       "author": "故乡的野菜_"
+    },
+    "bilibili-bv1mwjdzxenk": {
+      "jobId": "bilibili-bv1mwjdzxenk",
+      "title": "吴泳铭2025云栖大会演讲完整版",
+      "videoUrl": "https://www.bilibili.com/video/BV1MwJDzXEnK?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv1mwjdzxenk.md",
+      "status": "completed",
+      "updatedAt": "2025-09-24T10:07:34.836Z",
+      "author": "阿里云"
     }
   }
 }
