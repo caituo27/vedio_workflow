@@ -6,36 +6,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body>
-    <main class="container">
-      <header>
-        <h1>视频文字稿生成器</h1>
-        <p>
-          输入 YouTube 链接或哔哩哔哩 BV 号，查看任务状态并浏览自动生成的中文文字稿。
-        </p>
+  <body class="app">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="topbar-brand">
+          <span class="brand-badge">VW</span>
+          <div class="brand-meta">
+            <span class="brand-title">视频文字稿工作台</span>
+            <span class="brand-subtitle">随时掌握转写进度</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <a id="workflow-link" class="topbar-button" href="#" target="_blank" rel="noreferrer">触发任务</a>
+          <button type="button" class="topbar-ghost" aria-label="刷新任务" id="refresh-jobs">⟳</button>
+        </div>
       </header>
 
-      <section class="panel">
-        <h2>查询任务</h2>
-        <form id="lookup-form">
-          <label for="video-input">视频链接或 BV 号</label>
-          <div class="form-row">
-            <input id="video-input" type="text" placeholder="例如：https://youtu.be/xxxx 或 BV1xx411c7mD" required />
-            <button type="submit">查询</button>
+      <main class="content">
+        <section class="panel lookup-card">
+          <header class="panel-heading">
+            <h1>查询任务</h1>
+            <p>粘贴视频链接或 BV 号，快速定位转写进度。</p>
+          </header>
+          <form id="lookup-form" class="lookup-form" autocomplete="off">
+            <label class="sr-only" for="video-input">视频链接或 BV 号</label>
+            <div class="input-group">
+              <input id="video-input" name="video-input" type="text" placeholder="例如：https://youtu.be/xxxx 或 BV1xx411c7mD" required />
+              <button type="submit">查询</button>
+            </div>
+          </form>
+          <div id="lookup-result" class="lookup-result" hidden></div>
+          <div class="panel-footnote">
+            <span class="footnote-label">如何新建任务？</span>
+            <span class="footnote-copy">
+              前往 GitHub Actions，选择 “Run workflow” 并填写视频链接，工作流完成后会自动出现在列表。
+            </span>
           </div>
-        </form>
-        <div id="lookup-result" class="lookup-result" hidden></div>
-        <p class="hint">
-          新任务需要在 <a id="workflow-link" href="#" target="_blank" rel="noreferrer">GitHub Actions</a>
-          中手动触发，选择“Run workflow”并填写视频链接后即可。工作流会自动将状态与文字稿同步至本页面。
-        </p>
-      </section>
+        </section>
 
-      <section class="panel">
-        <h2>任务列表</h2>
-        <div id="jobs" class="jobs"></div>
-      </section>
-    </main>
+        <section class="panel kpi-panel">
+          <div class="panel-heading">
+            <h2>今日概览</h2>
+            <span class="panel-subtitle">实时汇总任务状态</span>
+          </div>
+          <div id="kpis" class="kpi-strip" aria-live="polite"></div>
+        </section>
+
+        <section class="panel jobs-panel">
+          <div class="panel-heading">
+            <h2>任务队列</h2>
+            <span class="panel-subtitle">按更新时间排序，最新任务在最上方</span>
+          </div>
+          <div id="jobs" class="jobs"></div>
+        </section>
+      </main>
+
+      <nav class="bottombar" aria-label="底部导航">
+        <button type="button" class="bottombar-item is-active">首页</button>
+        <button type="button" class="bottombar-item">队列</button>
+        <button type="button" class="bottombar-item">历史</button>
+        <button type="button" class="bottombar-item">设置</button>
+      </nav>
+    </div>
     <script src="./app.js" type="module"></script>
   </body>
 </html>
