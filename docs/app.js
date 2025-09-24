@@ -1,4 +1,4 @@
-const JOBS_ENDPOINT = "./data/jobs.json";
+const JOBS_ENDPOINT = "./data/list/jobs.json";
 
 const statusLabels = {
   processing: "处理中",
@@ -38,20 +38,17 @@ function buildTranscriptLink(transcriptPath) {
   if (!transcriptPath) {
     return null;
   }
-  if (/^https?:/i.test(transcriptPath)) {
-    return transcriptPath;
-  }
   const clean = transcriptPath
     .replace(/^docs\//i, "")
     .replace(/^\.\//, "")
-    .replace(/^\//, "");
-  try {
-    const absolute = new URL(clean, siteInfo.pagesBase).toString();
-    return absolute;
-  } catch (error) {
-    console.error("链接解析失败", error);
-    return `${siteInfo.pagesBase}${clean}`;
-  }
+    .replace(/^\//, "")
+    .replace(/\\/g, "/");
+
+  const target = /^https?:/i.test(transcriptPath)
+    ? transcriptPath
+    : `${siteInfo.pagesBase}${clean}`;
+
+  return `${siteInfo.pagesBase}viewer.html?src=${encodeURIComponent(target)}`;
 }
 
 async function fetchJobs() {
@@ -166,10 +163,12 @@ function renderJobs(container, jobs) {
       const errorMessage = job.error
         ? `<p class="error">错误信息：${job.error}</p>`
         : "";
+      const author = job.author || "未知";
       return `
         <article class="job-card">
           <h3>${job.title || job.jobId}</h3>
           <p><span class="status ${job.status}">${status}</span></p>
+          <p>作者：${author}</p>
           <p>视频链接：<a href="${job.videoUrl}" target="_blank" rel="noreferrer">打开</a></p>
           <p>最近更新：${new Date(job.updatedAt).toLocaleString()}</p>
           ${link ? `<p>${link}</p>` : ""}
@@ -194,10 +193,12 @@ function updateLookupResult(container, job) {
     : '<p>任务仍在处理中，请稍后刷新页面。</p>';
 
   const errorMessage = job.error ? `<p class="error">错误信息：${job.error}</p>` : "";
+  const author = job.author || "未知";
 
   container.hidden = false;
   container.innerHTML = `
     <p>状态：<span class="status ${job.status}">${status}</span></p>
+    <p>作者：${author}</p>
     <p>最近更新：${new Date(job.updatedAt).toLocaleString()}</p>
     ${link}
     ${errorMessage}

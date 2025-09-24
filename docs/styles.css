@@ -134,3 +134,123 @@ form {
     width: 100%;
   }
 }
+
+.viewer {
+  background: linear-gradient(180deg, rgba(3, 102, 214, 0.08), transparent 35%), Canvas;
+  min-height: 100vh;
+}
+
+.viewer-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.viewer-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.viewer-back {
+  color: #0366d6;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.viewer-back:hover {
+  text-decoration: underline;
+}
+
+.viewer-header h1 {
+  margin: 0.5rem 0 0;
+  font-size: 2rem;
+}
+
+.viewer-meta {
+  margin: 0.5rem 0 0;
+  color: rgba(128, 128, 128, 0.8);
+  font-size: 0.95rem;
+}
+
+.viewer-status {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(128, 128, 128, 0.1);
+  border: 1px solid rgba(128, 128, 128, 0.2);
+  font-weight: 500;
+}
+
+.viewer-content {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  box-shadow: 0 20px 45px rgba(3, 27, 78, 0.12);
+  border: 1px solid rgba(3, 102, 214, 0.1);
+}
+
+.viewer-content h1,
+.viewer-content h2,
+.viewer-content h3,
+.viewer-content h4 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.viewer-content p {
+  margin: 0.75rem 0;
+  text-align: justify;
+}
+
+.viewer-content ul {
+  padding-left: 1.2rem;
+}
+
+.viewer-content blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.5rem;
+  border-left: 4px solid rgba(3, 102, 214, 0.4);
+  background: rgba(3, 102, 214, 0.06);
+  border-radius: 0.75rem;
+}
+
+.viewer-content hr {
+  border: none;
+  border-top: 1px dashed rgba(128, 128, 128, 0.4);
+  margin: 2.5rem 0;
+}
+
+.viewer-content code {
+  background: rgba(3, 102, 214, 0.12);
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.4rem;
+}
+
+.viewer-content pre {
+  background: rgba(3, 18, 66, 0.9);
+  color: #f5faff;
+  padding: 1rem;
+  border-radius: 0.8rem;
+  overflow-x: auto;
+}
+
+.viewer-content a {
+  color: #024d9b;
+  text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+  .viewer-container {
+    padding: 2rem 1rem 3rem;
+  }
+
+  .viewer-content {
+    padding: 1.5rem;
+  }
+}

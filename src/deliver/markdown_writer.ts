@@ -48,7 +48,7 @@ export async function deliverMarkdown(
     transcript: TranscriptResult,
     options: DeliverOptions,
 ): Promise<{ markdownPath: string }> {
-    const finalDir = options.outputDir ?? path.resolve("docs/transcripts");
+    const finalDir = options.outputDir ?? path.resolve("docs/data/word");
     const markdownPath = path.join(finalDir, `${options.jobId}.md`);
     const markdown = buildMarkdown(options, transcript);
 

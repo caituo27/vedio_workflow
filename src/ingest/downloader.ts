@@ -9,6 +9,7 @@ export type DownloadResult = {
     audioPath: string;
     title: string;
     durationSeconds?: number;
+    author?: string;
 };
 
 tmp.setGracefulCleanup();
@@ -49,6 +50,7 @@ export async function downloadAudio(source: VideoSource): Promise<DownloadResult
     const infoFile = files.find((file) => file.endsWith(".info.json"));
     let title = source.videoUrl;
     let durationSeconds: number | undefined;
+    let author: string | undefined;
 
     if (infoFile) {
         const infoJson = JSON.parse(
@@ -56,6 +58,7 @@ export async function downloadAudio(source: VideoSource): Promise<DownloadResult
         );
         title = infoJson.title ?? title;
         durationSeconds = infoJson.duration;
+        author = infoJson.uploader ?? infoJson.channel ?? infoJson.artist ?? author;
     }
 
     const finalDir = path.resolve(".cache/audio");
@@ -72,6 +75,10 @@ export async function downloadAudio(source: VideoSource): Promise<DownloadResult
 
     if (typeof durationSeconds === "number") {
         result.durationSeconds = durationSeconds;
+    }
+
+    if (author) {
+        result.author = author;
     }
 
     return result;

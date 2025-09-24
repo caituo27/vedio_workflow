@@ -6,8 +6,8 @@
 
 - **多平台输入**：支持 YouTube 链接、哔哩哔哩链接或 BV 号。
 - **自动生成中文文字稿**：Gemini 自动识别音频内容，若原文非中文会翻译为中文，并按语义分段输出。
-- **Markdown 交付**：在 `docs/transcripts/` 下生成结构化 Markdown 文件。
-- **任务状态面板**：`docs/data/jobs.json` 记录任务状态，GitHub Pages 前端提供查询入口，可查看任务是否完成并跳转到文字稿。
+- **Markdown 交付**：在 `docs/data/word/` 下生成结构化 Markdown 文件，并通过定制的阅读器美观呈现内容。
+- **任务状态面板**：`docs/data/list/jobs.json` 记录任务状态与视频作者，GitHub Pages 前端提供查询入口，可查看任务是否完成并跳转到文字稿阅读器。
 - **工作流自动部署**：GitHub Actions 拉取视频、生成文字稿、提交变更并发布到 Pages。
 
 ## 目录结构
@@ -20,10 +20,12 @@
 │   ├── deliver/          # Markdown 写入与任务状态管理
 │   └── utils/            # 共用工具方法
 ├── docs/
-│   ├── data/jobs.json    # 任务状态索引（GitHub Pages 前端读取）
-│   ├── transcripts/      # 自动生成的 Markdown 文字稿
+│   ├── data/list/jobs.json  # 任务状态索引（GitHub Pages 前端读取）
+│   ├── data/word/           # 自动生成的 Markdown 文字稿
 │   ├── index.html        # GitHub Pages 首页（查询与展示）
 │   ├── app.js            # 前端脚本
+│   ├── viewer.html       # 文字稿阅读器入口页
+│   ├── viewer.js         # 读取并渲染 Markdown 的脚本
 │   └── styles.css        # 前端样式
 ├── .github/workflows/    # GitHub Actions 工作流定义
 ├── package.json          # Node 项目配置
@@ -46,7 +48,7 @@ npm run build
 DEV_VIDEO="https://youtu.be/xxxx" GEMINI_API_KEY="your-key" npm run dev
 ```
 
-调试脚本会调用 `src/cli/index.ts`，读取 `DEV_VIDEO` 作为输入。输出的 Markdown 会写入 `docs/transcripts/`，同时更新 `docs/data/jobs.json`。
+调试脚本会调用 `src/cli/index.ts`，读取 `DEV_VIDEO` 作为输入。输出的 Markdown 会写入 `docs/data/word/`，同时更新 `docs/data/list/jobs.json`。
 
 ## GitHub Secrets 配置
 
@@ -71,14 +73,14 @@ Actions 使用自带的 `GITHUB_TOKEN` 推送修改，无需额外配置。
 5. 提交更新后的 `docs/` 目录；
 6. 通过 `actions/deploy-pages` 发布 GitHub Pages。
 
-若任务失败，`docs/data/jobs.json` 会记录失败状态，以便前端提示。
+失败任务不会持久化在列表中，避免历史失败记录干扰结果。如需排查失败原因，可在 Actions 日志中查看详细报错。
 
 ## GitHub Pages 使用说明
 
 部署成功后访问仓库的 GitHub Pages：
 
 1. 在输入框中填写 YouTube 链接或 BV 号，点击「查询」即可查看任务状态；
-2. 若任务已完成，页面会提供跳转到 Markdown 文字稿的链接；
+2. 若任务已完成，页面会提供跳转到专属阅读页面（支持美化排版与移动端阅读）；
 3. 尚未处理的输入会提示前往 GitHub Actions 手动触发工作流；
 4. 任务列表区展示最近的所有任务及其状态，自动每 60 秒刷新一次。
 

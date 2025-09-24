@@ -7,7 +7,13 @@ import { success, error as logError } from "../utils/logger.js";
 import { downloadAudio } from "../ingest/downloader.js";
 import { transcribeWithGemini } from "../transform/gemini_transcriber.js";
 import { deliverMarkdown } from "../deliver/markdown_writer.js";
-import { markProcessing, markCompleted, markFailed } from "../deliver/status_manager.js";
+import {
+    markProcessing,
+    markCompleted,
+    markFailed,
+    updateJob,
+} from "../deliver/status_manager.js";
+import type { JobRecord } from "../deliver/status_manager.js";
 
 export type PipelineOptions = {
     apiKey?: string;
@@ -26,9 +32,23 @@ export async function runPipeline(videoInput: string, options: PipelineOptions):
     let downloadResult: Awaited<ReturnType<typeof downloadAudio>> | undefined;
 
     try {
-        await markProcessing(jobId, { title: source.videoUrl, videoUrl: source.videoUrl });
+        await markProcessing(jobId, {
+            title: source.videoUrl,
+            videoUrl: source.videoUrl,
+        });
 
         downloadResult = await downloadAudio(source);
+
+        const processingRecord = {
+            jobId,
+            title: downloadResult.title,
+            videoUrl: source.videoUrl,
+            status: "processing",
+            updatedAt: new Date().toISOString(),
+            ...(downloadResult.author ? { author: downloadResult.author } : {}),
+        } satisfies JobRecord;
+
+        await updateJob(processingRecord);
 
         const transcriptOptions: { title: string; durationSeconds?: number } = {
             title: downloadResult.title,
@@ -39,7 +59,12 @@ export async function runPipeline(videoInput: string, options: PipelineOptions):
 
         const transcript = await transcribeWithGemini(apiKey, downloadResult.audioPath, transcriptOptions);
 
-        const deliverOptions: { jobId: string; title: string; videoUrl: string; outputDir?: string } = {
+        const deliverOptions: {
+            jobId: string;
+            title: string;
+            videoUrl: string;
+            outputDir?: string;
+        } = {
             jobId,
             title: downloadResult.title,
             videoUrl: source.videoUrl,
@@ -51,21 +76,27 @@ export async function runPipeline(videoInput: string, options: PipelineOptions):
         const { markdownPath } = await deliverMarkdown(transcript, deliverOptions);
         const relativeTranscriptPath = path.relative(path.resolve("docs"), markdownPath);
 
-        await markCompleted(jobId, {
+        const completionDetails = {
             title: downloadResult.title,
             videoUrl: source.videoUrl,
             transcriptPath: relativeTranscriptPath.replace(/\\/g, "/"),
-        });
+            ...(downloadResult.author ? { author: downloadResult.author } : {}),
+        };
+
+        await markCompleted(jobId, completionDetails);
 
         success(`任务完成，文字稿已生成: ${markdownPath}`);
     } catch (err) {
         const failure = err as Error;
         logError(`任务失败: ${failure.message}`);
-        await markFailed(jobId, {
+        const failureDetails = {
             title: downloadResult?.title ?? source.videoUrl,
             videoUrl: source.videoUrl,
             error: failure,
-        });
+            ...(downloadResult?.author ? { author: downloadResult.author } : {}),
+        };
+
+        await markFailed(jobId, failureDetails);
         throw failure;
     } finally {
         if (downloadResult?.audioPath) {
@@ -81,7 +112,7 @@ program
     .description("下载视频、调用 Gemini 生成中文文字稿，并发布到 GitHub Pages。")
     .argument("<video>", "YouTube 链接、哔哩哔哩链接或 BV 号")
     .option("-k, --api-key <key>", "Gemini API Key (默认读取 GEMINI_API_KEY 环境变量)")
-    .option("-o, --output <dir>", "文字稿输出目录", "docs/transcripts")
+    .option("-o, --output <dir>", "文字稿输出目录", "docs/data/word")
     .action(async (videoInput, options) => {
         try {
             const pipelineOptions: PipelineOptions = {};
