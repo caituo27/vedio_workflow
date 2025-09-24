@@ -89,6 +89,15 @@
       "status": "completed",
       "updatedAt": "2025-09-24T16:04:07.242Z",
       "author": "罗肖尼Shawney"
+    },
+    "bilibili-bv1pgjxz9ers": {
+      "jobId": "bilibili-bv1pgjxz9ers",
+      "title": "巨头竟然都在扎堆AI的这个赛道…？",
+      "videoUrl": "https://www.bilibili.com/video/BV1pGJXz9ERs",
+      "transcriptPath": "data/word/bilibili-bv1pgjxz9ers.md",
+      "status": "completed",
+      "updatedAt": "2025-09-24T16:57:38.111Z",
+      "author": "小Lin竖着说"
     }
   }
 }
