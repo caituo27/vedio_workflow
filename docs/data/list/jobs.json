@@ -98,6 +98,15 @@
       "status": "completed",
       "updatedAt": "2025-09-24T16:57:38.111Z",
       "author": "小Lin竖着说"
+    },
+    "youtube-rnjcfif1dpy": {
+      "jobId": "youtube-rnjcfif1dpy",
+      "title": "Andrew Ng: Building Faster with AI",
+      "videoUrl": "https://youtu.be/RNJCfif1dPY?si=-0e35blpUSWZ8cgv",
+      "transcriptPath": "data/word/youtube-rnjcfif1dpy.md",
+      "status": "completed",
+      "updatedAt": "2025-09-25T02:35:25.433Z",
+      "author": "Y Combinator"
     }
   }
 }
