@@ -208,7 +208,6 @@ function buildMetaItems(metaItems, sourceUrl) {
   } else {
     result.push(sourceLabel);
   }
-
   return result;
 }
 

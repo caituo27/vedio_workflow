@@ -694,6 +694,10 @@ body {
   text-decoration: underline;
 }
 
+.viewer-thread-content button {
+  display: none !important;
+}
+
 .viewer-thread-content blockquote {
   border-left: 4px solid rgba(29, 155, 240, 0.45);
   background: rgba(29, 155, 240, 0.08);
