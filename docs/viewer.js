@@ -190,7 +190,14 @@ function splitMarkdown(markdown) {
 }
 
 function buildMetaItems(metaItems, sourceUrl) {
-  const filtered = metaItems.filter((item) => !/^原始语言/i.test(item));
+  const filtered = metaItems.filter((item) => {
+    const normalised = item.trim();
+    const compact = normalised.replace(/\s+/g, "").toLowerCase();
+    if (compact.startsWith("原始语言")) return false;
+    if (compact.startsWith("视频作者")) return false;
+    if (compact.startsWith("生成时间")) return false;
+    return true;
+  });
 
   const result = [...filtered];
   const videoIndex = result.findIndex((item) => /^视频链接/i.test(item));
@@ -208,33 +215,7 @@ function buildMetaItems(metaItems, sourceUrl) {
 function enhanceParagraphs() {
   const paragraphs = contentEl.querySelectorAll("p");
   paragraphs.forEach((paragraph) => {
-    const textToCopy = paragraph.textContent.trim();
     paragraph.classList.add("viewer-paragraph");
-
-    if (!textToCopy) {
-      return;
-    }
-
-    const copyButton = document.createElement("button");
-    copyButton.type = "button";
-    copyButton.textContent = "复制段落";
-    copyButton.addEventListener("click", async (event) => {
-      event.stopPropagation();
-      const original = copyButton.textContent;
-      try {
-        const copied = await copyText(textToCopy);
-        copyButton.textContent = copied ? "已复制" : "复制失败";
-      } catch (error) {
-        console.error(error);
-        copyButton.textContent = "复制失败";
-      } finally {
-        setTimeout(() => {
-          copyButton.textContent = original;
-        }, 1600);
-      }
-    });
-
-    paragraph.appendChild(copyButton);
   });
 }
 
@@ -283,30 +264,4 @@ function throttle(fn, wait) {
       fn.apply(this, args);
     }
   };
-}
-
-async function copyText(text) {
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    await navigator.clipboard.writeText(text);
-    return true;
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.style.position = "fixed";
-  textarea.style.opacity = "0";
-  document.body.appendChild(textarea);
-  textarea.select();
-
-  let copied = false;
-  try {
-    copied = document.execCommand("copy");
-  } catch (error) {
-    console.error(error);
-    copied = false;
-  } finally {
-    document.body.removeChild(textarea);
-  }
-
-  return copied;
 }

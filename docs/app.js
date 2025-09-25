@@ -148,49 +148,6 @@ function normaliseInput(value) {
   return null;
 }
 
-function renderKpis(container, entries) {
-  if (!container) return;
-
-  if (!entries.length) {
-    container.innerHTML = `
-      <article class="kpi-card">
-        <span class="kpi-label">暂无任务</span>
-        <span class="kpi-value">0</span>
-      </article>
-    `;
-    return;
-  }
-
-  const counters = entries.reduce(
-    (acc, job) => {
-      acc.total += 1;
-      if (job.status === "completed") acc.completed += 1;
-      if (job.status === "processing") acc.processing += 1;
-      if (job.status === "failed") acc.failed += 1;
-      return acc;
-    },
-    { total: 0, completed: 0, processing: 0, failed: 0 }
-  );
-
-  const kpiItems = [
-    { key: "total", label: "全部任务", value: counters.total },
-    { key: "completed", label: "已完成", value: counters.completed },
-    { key: "processing", label: "处理中", value: counters.processing },
-    { key: "failed", label: "失败", value: counters.failed },
-  ];
-
-  container.innerHTML = kpiItems
-    .map(
-      (item) => `
-        <article class="kpi-card${item.key !== "total" ? ` is-${item.key}` : ""}">
-          <span class="kpi-label">${item.label}</span>
-          <span class="kpi-value">${item.value}</span>
-        </article>
-      `
-    )
-    .join("");
-}
-
 function renderJobs(container, jobs) {
   const entries = Object.values(jobs).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 
@@ -204,28 +161,28 @@ function renderJobs(container, jobs) {
       const status = statusLabels[job.status] || job.status;
       const transcriptLink = buildTranscriptLink(job.transcriptPath);
       const author = job.author || "未知";
-      const jobActions = transcriptLink
-        ? `
-            <a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">查看文字稿</a>
-            <span class="job-action-divider">·</span>
-            <a href="${transcriptLink.rawUrl}" target="_blank" rel="noreferrer">下载 Markdown</a>
-          `
+      const jobTitle = job.title || job.jobId;
+      const hasTranscript = Boolean(transcriptLink);
+      const jobActions = hasTranscript
+        ? '<span class="job-open-hint">点击打开文字稿</span>'
         : '<span class="pending-hint">任务仍在处理中</span>';
       const errorMessage = job.error
         ? `<p class="job-error">错误信息：${job.error}</p>`
         : "";
+      const cardAttributes = hasTranscript
+        ? ` data-viewer-url="${transcriptLink.viewerUrl}" role="button" tabindex="0" aria-label="打开文字稿：${jobTitle}"`
+        : "";
 
       return `
-        <article class="job-card">
+        <article class="job-card${hasTranscript ? " has-transcript" : ""}"${cardAttributes}>
           <div class="job-card-head">
             <div class="job-status-row">
               <span class="status ${job.status}">${status}</span>
               <span class="job-updated">最近更新：${new Date(job.updatedAt).toLocaleString()}</span>
             </div>
-            <h3>${job.title || job.jobId}</h3>
+            <h3>${jobTitle}</h3>
             <div class="job-meta">
               <span>作者：${author}</span>
-              <span>视频：<a href="${job.videoUrl}" target="_blank" rel="noreferrer">打开原视频</a></span>
             </div>
             ${errorMessage}
           </div>
@@ -237,6 +194,7 @@ function renderJobs(container, jobs) {
     })
     .join("");
 
+  setupJobCardInteractions(container);
   return { entries };
 }
 
@@ -250,7 +208,7 @@ function updateLookupResult(container, job) {
   const status = statusLabels[job.status] || job.status;
   const transcriptLink = buildTranscriptLink(job.transcriptPath);
   const link = transcriptLink
-    ? `<p><a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">打开文字稿</a> · <a href="${transcriptLink.rawUrl}" target="_blank" rel="noreferrer">下载 Markdown</a></p>`
+    ? `<p><a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">打开文字稿</a></p>`
     : '<p>任务仍在处理中，请稍后刷新页面。</p>';
 
   const errorMessage = job.error ? `<p class="error">错误信息：${job.error}</p>` : "";
@@ -272,18 +230,43 @@ function setupWorkflowLink() {
   link.href = `https://github.com/${siteInfo.owner}/${siteInfo.repo}/actions/workflows/transcript.yml`;
 }
 
+function setupJobCardInteractions(container) {
+  if (!container || container.dataset.interactive === "true") return;
+
+  const activateCard = (card) => {
+    if (!card) return;
+    const targetUrl = card.dataset.viewerUrl;
+    if (targetUrl) {
+      window.open(targetUrl, "_blank", "noopener");
+    }
+  };
+
+  container.addEventListener("click", (event) => {
+    const card = event.target.closest(".job-card[data-viewer-url]");
+    if (!card || !container.contains(card)) return;
+    activateCard(card);
+  });
+
+  container.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const card = event.target.closest(".job-card[data-viewer-url]");
+    if (!card || !container.contains(card)) return;
+    event.preventDefault();
+    activateCard(card);
+  });
+
+  container.dataset.interactive = "true";
+}
+
 async function bootstrap() {
   setupWorkflowLink();
 
   const jobsContainer = document.getElementById("jobs");
-  const kpisContainer = document.getElementById("kpis");
   const resultContainer = document.getElementById("lookup-result");
   const form = document.getElementById("lookup-form");
-  const refreshButton = document.getElementById("refresh-jobs");
 
   let jobs = await fetchJobs();
-  const { entries } = renderJobs(jobsContainer, jobs.jobs || {});
-  renderKpis(kpisContainer, entries || []);
+  renderJobs(jobsContainer, jobs.jobs || {});
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -299,31 +282,15 @@ async function bootstrap() {
     // Refresh jobs before lookup to capture latest changes.
     jobs = await fetchJobs();
     const jobMap = jobs.jobs || {};
-    const lookupEntries = renderJobs(jobsContainer, jobMap);
-    renderKpis(kpisContainer, lookupEntries.entries || []);
+    renderJobs(jobsContainer, jobMap);
     const job = jobMap[normalized.jobId];
     updateLookupResult(resultContainer, job ?? null);
   });
 
-  if (refreshButton) {
-    refreshButton.addEventListener("click", async () => {
-      refreshButton.disabled = true;
-      refreshButton.classList.add("is-busy");
-      jobs = await fetchJobs();
-      const { entries: refreshedEntries } = renderJobs(jobsContainer, jobs.jobs || {});
-      renderKpis(kpisContainer, refreshedEntries || []);
-      setTimeout(() => {
-        refreshButton.disabled = false;
-        refreshButton.classList.remove("is-busy");
-      }, 400);
-    });
-  }
-
   // Auto refresh job list every 60 seconds.
   setInterval(async () => {
     jobs = await fetchJobs();
-    const { entries: refreshedEntries } = renderJobs(jobsContainer, jobs.jobs || {});
-    renderKpis(kpisContainer, refreshedEntries || []);
+    renderJobs(jobsContainer, jobs.jobs || {});
   }, 60_000);
 }
 
