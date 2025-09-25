@@ -107,6 +107,15 @@
       "status": "completed",
       "updatedAt": "2025-09-25T02:35:25.433Z",
       "author": "Y Combinator"
+    },
+    "bilibili-bv13enwzheow": {
+      "jobId": "bilibili-bv13enwzheow",
+      "title": "看完iPhone 17后，想和大家聊聊我眼中的好设计......",
+      "videoUrl": "https://www.bilibili.com/video/BV13enwzhEow?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv13enwzheow.md",
+      "status": "completed",
+      "updatedAt": "2025-09-25T12:11:34.381Z",
+      "author": "李想"
     }
   }
 }
