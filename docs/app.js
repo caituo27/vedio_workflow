@@ -370,31 +370,35 @@ function updateJobs(container, jobs) {
   mountInitialJobs(container);
 }
 
-function updateLookupResult(container, job) {
-  if (!job) {
-    container.hidden = false;
+function updateLookupResult(container, jobs) {
+  container.hidden = false;
+  if (!jobs || jobs.length === 0) {
     container.innerHTML = '<p>未找到任务，请确认链接是否正确，或在 GitHub Actions 中手动触发新任务。</p>';
     return;
   }
 
-  const status = statusLabels[job.status] || job.status;
-  const transcriptLink = buildTranscriptLink(job.transcriptPath);
-  const link = transcriptLink
-    ? `<p><a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">打开文字稿</a></p>`
-    : '<p>任务仍在处理中，请稍后刷新页面。</p>';
+  let htmlContent = '';
+  jobs.forEach(job => {
+    const status = statusLabels[job.status] || job.status;
+    const transcriptLink = buildTranscriptLink(job.transcriptPath);
+    const link = transcriptLink
+      ? `<p><a href="${transcriptLink.viewerUrl}" target="_blank" rel="noreferrer">打开文字稿</a></p>`
+      : '<p>任务仍在处理中，请稍后刷新页面。</p>';
 
-  const errorMessage = job.error ? `<p class="error">错误信息：${job.error}</p>` : "";
-  const author = job.author || "未知";
+    const errorMessage = job.error ? `<p class="error">错误信息：${job.error}</p>` : "";
+    const author = job.author || "未知";
 
-  container.hidden = false;
-  container.innerHTML = `
-    <h3>${escapeHtml(job.title || '未命名视频')}</h3>
-    <p>状态：<span class="status ${job.status}">${status}</span></p>
-    <p>作者：${author}</p>
-    <p>最近更新：${new Date(job.updatedAt).toLocaleString()}</p>
-    ${link}
-    ${errorMessage}
-  `;
+    htmlContent += `
+      <h3>${escapeHtml(job.title || '未命名视频')}</h3>
+      <p>状态：<span class="status ${job.status}">${status}</span></p>
+      <p>作者：${author}</p>
+      <p>最近更新：${new Date(job.updatedAt).toLocaleString()}</p>
+      ${link}
+      ${errorMessage}
+      <hr>
+    `;
+  });
+  container.innerHTML = htmlContent;
 }
 
 function setupWorkflowLink() {
@@ -522,16 +526,19 @@ async function bootstrap() {
     const jobMap = jobs.jobs || {};
     updateJobs(jobsContainer, jobMap);
 
-    let foundJob = null;
+    let foundJobs = [];
     if (normalized.isTitleSearch) {
       const query = normalized.query;
       const allJobs = Object.values(jobMap);
-      foundJob = allJobs.find(job => job.title && job.title.toLowerCase().includes(query));
+      foundJobs = allJobs.filter(job => job.title && job.title.toLowerCase().includes(query)).slice(0, 10);
     } else {
-      foundJob = jobMap[normalized.jobId];
+      const job = jobMap[normalized.jobId];
+      if (job) {
+        foundJobs.push(job);
+      }
     }
 
-    updateLookupResult(resultContainer, foundJob ?? null);
+    updateLookupResult(resultContainer, foundJobs);
   });
 
   // Auto refresh job list every 60 seconds.
@@ -539,6 +546,17 @@ async function bootstrap() {
     jobs = await fetchJobs();
     updateJobs(jobsContainer, jobs.jobs || {});
   }, 60_000);
+
+  document.addEventListener('click', (event) => {
+    if (!resultContainer || resultContainer.hidden) {
+      return;
+    }
+    const isClickInsideResult = resultContainer.contains(event.target);
+    const isClickInsideForm = form.contains(event.target);
+    if (!isClickInsideResult && !isClickInsideForm) {
+      resultContainer.hidden = true;
+    }
+  });
 }
 
 bootstrap();

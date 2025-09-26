@@ -355,7 +355,7 @@ a {
 .jobs-grid {
   display: grid;
   gap: clamp(1.4rem, 4vw, 2rem);
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .jobs-more .cta {
@@ -579,7 +579,7 @@ a {
   }
 
   .jobs-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .callout {
@@ -611,6 +611,10 @@ a {
   .cta {
     flex: 1;
     justify-content: center;
+  }
+
+  .jobs-grid {
+    grid-template-columns: 1fr;
   }
 }
 
