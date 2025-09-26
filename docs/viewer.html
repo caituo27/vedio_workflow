@@ -6,48 +6,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body class="viewer">
-    <div class="viewer-shell" data-theme="light">
-      <header class="viewer-topbar">
-        <a class="viewer-logo" href="./index.html" aria-label="返回首页">
-          <span class="viewer-logo-mark">VW</span>
-          <span class="viewer-logo-text">vedio workflow</span>
-        </a>
-        <div class="viewer-topbar-controls">
-          <button
-            id="actions-toggle"
-            class="viewer-action viewer-menu-toggle"
-            type="button"
-            aria-label="展开操作菜单"
-            aria-expanded="false"
-          >☰</button>
-          <div class="viewer-actions" id="viewer-actions">
-            <button id="theme-toggle" class="viewer-action" type="button" aria-label="切换主题">🌙</button>
-          </div>
+  <body class="page">
+    <header class="nav" data-animate>
+      <div class="nav-brand">
+        <span class="nav-logo">VW</span>
+        <div class="nav-copy">
+          <span class="nav-title">视频文字稿工作流</span>
+          <span class="nav-subtitle">ingest → transform → deliver</span>
         </div>
-      </header>
-
-      <div class="viewer-progress-track">
-        <div id="progress-bar" class="viewer-progress-bar"></div>
       </div>
+      <nav class="nav-actions">
+        <a id="workflow-link" class="cta cta--primary" href="#" target="_blank" rel="noreferrer">触发流水线</a>
+      </nav>
+    </header>
 
-      <main class="viewer-main">
-        <aside class="viewer-thread-meta">
-          <p class="viewer-thread-label">阅读进度</p>
-          <p id="progress-value" class="viewer-thread-progress">0%</p>
-        </aside>
+    <main class="main">
+      <div class="viewer-shell" data-theme="light">
+        <div class="viewer-progress-track">
+          <div id="progress-bar" class="viewer-progress-bar"></div>
+        </div>
 
-        <section class="viewer-thread">
-          <header class="viewer-thread-header">
-            <h1 id="viewer-title" class="viewer-thread-title">文字稿</h1>
-            <div id="viewer-meta" class="viewer-thread-info"></div>
-          </header>
+        <div class="viewer-main">
+          <aside class="viewer-thread-meta">
+            <p class="viewer-thread-label">阅读进度</p>
+            <p id="progress-value" class="viewer-thread-progress">0%</p>
+          </aside>
 
-          <section id="viewer-status" class="viewer-thread-status">加载中…</section>
-          <article id="viewer-content" class="viewer-thread-content" hidden></article>
-        </section>
-      </main>
-    </div>
+          <section class="viewer-thread">
+            <header class="viewer-thread-header">
+              <h1 id="viewer-title" class="viewer-thread-title">文字稿</h1>
+              <div id="viewer-meta" class="viewer-thread-info"></div>
+            </header>
+
+            <section id="viewer-status" class="viewer-thread-status">加载中…</section>
+            <article id="viewer-content" class="viewer-thread-content" hidden></article>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer" data-animate>
+      <p>Made with Gemini &nbsp; yt-dlp &nbsp; GitHub Actions &nbsp; GitHub Pages</p>
+    </footer>
+
     <script type="module" src="./viewer.js"></script>
   </body>
 </html>

@@ -5,11 +5,8 @@ const contentEl = document.getElementById("viewer-content");
 const metaEl = document.getElementById("viewer-meta");
 const titleEl = document.getElementById("viewer-title");
 const shellEl = document.querySelector(".viewer-shell");
-const themeToggleBtn = document.getElementById("theme-toggle");
 const progressBar = document.getElementById("progress-bar");
 const progressValue = document.getElementById("progress-value");
-const actionsToggleBtn = document.getElementById("actions-toggle");
-const actionsContainer = document.getElementById("viewer-actions");
 
 const THEME_STORAGE_KEY = "vw-viewer-theme";
 let articleTop = 0;
@@ -19,45 +16,14 @@ const siteInfo = detectSiteInfo();
 const params = new URLSearchParams(window.location.search);
 const srcParam = params.get("src");
 
+
+
 (function initTheme() {
   const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
   const initialTheme = storedTheme || (prefersDark ? "dark" : "light");
   applyTheme(initialTheme);
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener("click", () => {
-      const nextTheme = shellEl.dataset.theme === "dark" ? "light" : "dark";
-      applyTheme(nextTheme);
-    });
-  }
 })();
-
-if (actionsToggleBtn && actionsContainer) {
-  actionsToggleBtn.addEventListener("click", (event) => {
-    event.stopPropagation();
-    const isOpen = actionsContainer.classList.toggle("is-open");
-    actionsToggleBtn.setAttribute("aria-expanded", String(isOpen));
-  });
-
-  document.addEventListener("click", (event) => {
-    if (!actionsContainer.classList.contains("is-open")) {
-      return;
-    }
-    if (event.target instanceof Node && (actionsContainer.contains(event.target) || actionsToggleBtn.contains(event.target))) {
-      return;
-    }
-    actionsContainer.classList.remove("is-open");
-    actionsToggleBtn.setAttribute("aria-expanded", "false");
-  });
-
-  window.addEventListener("resize", () => {
-    if (window.innerWidth > 768 && actionsContainer.classList.contains("is-open")) {
-      actionsContainer.classList.remove("is-open");
-      actionsToggleBtn.setAttribute("aria-expanded", "false");
-    }
-  });
-}
 
 (function handleProgressListeners() {
   const throttled = throttle(updateProgress, 80);
@@ -68,6 +34,16 @@ if (actionsToggleBtn && actionsContainer) {
 })();
 
 (async function main() {
+  const brand = document.querySelector(".nav-brand");
+  if (brand) {
+    const link = document.createElement("a");
+    link.href = "./index.html";
+    link.className = brand.className;
+    link.style.textDecoration = "none";
+    link.append(...brand.childNodes);
+    brand.replaceWith(link);
+  }
+
   if (!srcParam) {
     setError("缺少 src 参数，无法定位文字稿文件。");
     return;
@@ -91,7 +67,7 @@ if (actionsToggleBtn && actionsContainer) {
     console.error(error);
     setError((error && error.message) || "加载失败");
   }
-})();
+})()
 
 function renderMarkdown(markdown, sourceUrl) {
   const { title, metaItems, body } = splitMarkdown(markdown);
@@ -111,13 +87,46 @@ function renderMarkdown(markdown, sourceUrl) {
     }
   }
 
-  const html = marked.parse(body, { mangle: false, headerIds: false });
-  contentEl.innerHTML = html;
+  const htmlWithExtraBreaks = marked.parse(body, { mangle: false, headerIds: false, breaks: true }).replace(/<br>/g, "<br><br>");
+  contentEl.innerHTML = htmlWithExtraBreaks;
   contentEl.hidden = false;
   statusEl.hidden = true;
 
   enhanceParagraphs();
   measureArticle(updateProgress);
+
+  const videoLinkItem = metaItems.find((item) => item.toLowerCase().startsWith("视频链接"));
+  const sourceLinkItem = `原始文本：<a href="#" id="view-source-link">点击查看</a>`;
+
+  const footerLinks = [videoLinkItem, sourceLinkItem].filter(Boolean);
+
+  if (footerLinks.length > 0) {
+    const footerEl = document.createElement("footer");
+    footerEl.className = "viewer-thread-footer";
+    footerEl.innerHTML = footerLinks.map((item) => `<span>${marked.parseInline(item)}</span>`).join(" · ");
+    contentEl.insertAdjacentElement("afterend", footerEl);
+
+    const viewSourceLink = document.getElementById("view-source-link");
+    if (viewSourceLink) {
+      viewSourceLink.addEventListener("click", async (event) => {
+        event.preventDefault();
+        try {
+          const response = await fetch(sourceUrl);
+          if (!response.ok) {
+            throw new Error(`无法获取原始文件: ${response.status}`);
+          }
+          const text = await response.text();
+          const newTab = window.open();
+          newTab.document.write("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><title>原始文本</title><style>body { white-space: pre-wrap; font-family: monospace; padding: 1rem; color: #333; background: #fdfdfd; }</style></head><body></body></html>");
+          newTab.document.body.textContent = text;
+          newTab.document.close();
+        } catch (error) {
+          console.error("查看原始文本失败:", error);
+          alert("无法加载原始文本文件。详情请查看控制台。");
+        }
+      });
+    }
+  }
 }
 
 function setError(message) {
@@ -126,13 +135,20 @@ function setError(message) {
 }
 
 function detectSiteInfo() {
-  const { origin, pathname } = window.location;
+  const { origin, pathname, href, protocol } = window.location;
   const segments = pathname.split("/").filter(Boolean);
+  const baseUrl = new URL(window.location.href);
+  const pagesBase = new URL("./", baseUrl).toString();
   const info = {
-    owner: "USERNAME",
+    owner: "caituo27",
     repo: "vedio_workflow",
-    pagesBase: `${origin.replace(/\/$/, "")}/`,
+    pagesBase,
+    isFileProtocol: protocol === "file:",
   };
+
+  if (protocol === "file:") {
+    return info;
+  }
 
   const hostMatch = origin.match(/^https:\/\/([^\.]+)\.github\.io/i);
 
@@ -142,7 +158,8 @@ function detectSiteInfo() {
       info.repo = segments[0];
       info.pagesBase = `${origin.replace(/\/$/, "")}/${info.repo}/`;
     }
-  } else if (segments.length >= 2) {
+  }
+  else if (segments.length >= 2 && origin !== "null") {
     info.owner = segments[0];
     info.repo = segments[1];
     info.pagesBase = `${origin.replace(/\/$/, "")}/${segments[0]}/${segments[1]}/`;
@@ -152,10 +169,14 @@ function detectSiteInfo() {
 }
 
 function resolveSource(src) {
+  const normalised = src.replace(/^\.\//, "").replace(/^\//, "");
+
   try {
     return new URL(src).toString();
   } catch (error) {
-    const normalised = src.replace(/^\.\//, "").replace(/^\//, "");
+    if (siteInfo.isFileProtocol) {
+      return normalised;
+    }
     try {
       return new URL(normalised, siteInfo.pagesBase).toString();
     } catch (err) {
@@ -189,26 +210,16 @@ function splitMarkdown(markdown) {
   return { title, metaItems, body: remaining };
 }
 
-function buildMetaItems(metaItems, sourceUrl) {
-  const filtered = metaItems.filter((item) => {
-    const normalised = item.trim();
-    const compact = normalised.replace(/\s+/g, "").toLowerCase();
-    if (compact.startsWith("原始语言")) return false;
-    if (compact.startsWith("视频作者")) return false;
-    if (compact.startsWith("生成时间")) return false;
+function buildMetaItems(metaItems) {
+  return metaItems.filter((item) => {
+    const normalised = item.trim().toLowerCase();
+    if (normalised.startsWith("原始语言")) return false;
+    if (normalised.startsWith("视频作者")) return false;
+    if (normalised.startsWith("生成时间")) return false;
+    if (normalised.startsWith("视频链接")) return false;
+    if (normalised.startsWith("原始文本")) return false;
     return true;
   });
-
-  const result = [...filtered];
-  const videoIndex = result.findIndex((item) => /^视频链接/i.test(item));
-  const sourceLabel = `原始文本：[点击查看](${sourceUrl})`;
-
-  if (videoIndex !== -1) {
-    result.splice(videoIndex + 1, 0, sourceLabel);
-  } else {
-    result.push(sourceLabel);
-  }
-  return result;
 }
 
 function enhanceParagraphs() {
@@ -246,12 +257,9 @@ function applyTheme(theme) {
   if (!shellEl) {
     return;
   }
-  const next = theme === "dark" ? "dark" : "light";
-  shellEl.dataset.theme = next;
-  window.localStorage.setItem(THEME_STORAGE_KEY, next);
-  if (themeToggleBtn) {
-    themeToggleBtn.textContent = next === "dark" ? "☀️" : "🌙";
-  }
+  const isDark = theme === "dark";
+  shellEl.classList.toggle("viewer-dark", isDark);
+  window.localStorage.setItem(THEME_STORAGE_KEY, theme);
 }
 
 function throttle(fn, wait) {

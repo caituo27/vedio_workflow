@@ -7,15 +7,45 @@ const statusLabels = {
 };
 
 const siteInfo = detectSiteInfo();
+const MAX_VISIBLE_JOBS = 8;
+const CARD_TRANSITION_MS = 280;
+let latestJobMap = {};
+let showingAllJobs = false;
+let jobsMoreContainer;
+let jobsMoreButton;
 
 function detectSiteInfo() {
-  const { origin, pathname } = window.location;
+  const { origin, pathname, href, protocol } = window.location;
   const segments = pathname.split("/").filter(Boolean);
+  const baseUrl = new URL(window.location.href);
+
+  const directoryPath = (() => {
+    if (pathname.endsWith("/")) {
+      return pathname;
+    }
+    const lastSlash = pathname.lastIndexOf("/");
+    if (lastSlash === -1) {
+      return "/";
+    }
+    return pathname.slice(0, lastSlash + 1);
+  })();
+
+  let pagesBase = new URL("./", baseUrl).toString();
+  if (protocol !== "file:") {
+    pagesBase = new URL(directoryPath || "/", origin).toString();
+  }
+
   const info = {
-    owner: "USERNAME",
+    owner: "caituo27",
     repo: "vedio_workflow",
-    pagesBase: `${origin.replace(/\/$/, "")}/`,
+    pagesBase,
+    isFileProtocol: protocol === "file:",
+    pageDir: directoryPath || "/",
   };
+
+  if (protocol === "file:") {
+    return info;
+  }
 
   const hostMatch = origin.match(/^https:\/\/([^\.]+)\.github\.io/i);
 
@@ -25,7 +55,7 @@ function detectSiteInfo() {
       info.repo = segments[0];
       info.pagesBase = `${origin.replace(/\/$/, "")}/${info.repo}/`;
     }
-  } else if (segments.length >= 2) {
+  } else if (segments.length >= 2 && origin !== "null") {
     info.owner = segments[0];
     info.repo = segments[1];
     info.pagesBase = `${origin.replace(/\/$/, "")}/${segments[0]}/${segments[1]}/`;
@@ -44,13 +74,39 @@ function buildTranscriptLink(transcriptPath) {
     .replace(/^\//, "")
     .replace(/\\/g, "/");
 
-  const rawUrl = /^https?:/i.test(transcriptPath)
-    ? transcriptPath
-    : `${siteInfo.pagesBase}${clean}`;
+  let rawUrl = transcriptPath;
+  if (!/^https?:/i.test(transcriptPath)) {
+    if (siteInfo.isFileProtocol) {
+      rawUrl = clean;
+    } else {
+      try {
+        const baseForRaw = new URL(siteInfo.pageDir || "/", window.location.origin);
+        rawUrl = new URL(clean, baseForRaw).toString();
+      } catch (error) {
+        console.warn("无法解析 transcriptPath，使用相对路径", transcriptPath, error);
+        rawUrl = clean;
+      }
+    }
+  }
 
-  const viewerUrl = `${siteInfo.pagesBase}viewer.html?src=${encodeURIComponent(rawUrl)}`;
+  let viewerHref;
+  if (siteInfo.isFileProtocol) {
+    viewerHref = `viewer.html?src=${encodeURIComponent(rawUrl)}`;
+  } else {
+    try {
+      const dir = siteInfo.pageDir || "/";
+      const normalisedDir = dir.endsWith("/") ? dir : `${dir}/`;
+      const viewerUrl = new URL(`${normalisedDir}viewer.html`, window.location.origin);
+      viewerUrl.searchParams.set("src", clean);
+      viewerHref = viewerUrl.toString();
+    } catch (error) {
+      const fallbackDir = siteInfo.pageDir || "/";
+      const normalisedDir = fallbackDir.endsWith("/") ? fallbackDir : `${fallbackDir}/`;
+      viewerHref = `${window.location.origin}${normalisedDir}viewer.html?src=${encodeURIComponent(rawUrl)}`;
+    }
+  }
 
-  return { viewerUrl, rawUrl };
+  return { viewerUrl: viewerHref, rawUrl, displayPath: clean };
 }
 
 async function fetchJobs() {
@@ -148,54 +204,170 @@ function normaliseInput(value) {
   return null;
 }
 
-function renderJobs(container, jobs) {
-  const entries = Object.values(jobs).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+const HTML_ESCAPE_LOOKUP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
 
-  if (!entries.length) {
+function escapeHtml(value) {
+  if (value == null) {
+    return "";
+  }
+  return String(value).replace(/[&<>"']/g, (char) => HTML_ESCAPE_LOOKUP[char] ?? char);
+}
+
+function formatDate(timestamp) {
+  if (!timestamp) {
+    return "";
+  }
+  try {
+    return new Date(timestamp).toLocaleString();
+  } catch (error) {
+    return String(timestamp);
+  }
+}
+
+function getSortedJobs() {
+  return Object.values(latestJobMap).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+function buildJobCardHTML(job) {
+  const status = statusLabels[job.status] || job.status;
+  const transcriptLink = buildTranscriptLink(job.transcriptPath);
+  const hasTranscript = Boolean(transcriptLink);
+  const jobTitle = escapeHtml(job.title || job.jobId || "未命名视频");
+  const author = escapeHtml(job.author || "未知");
+  const jobId = escapeHtml(job.jobId || "-");
+  const updatedAt = escapeHtml(formatDate(job.updatedAt));
+  const errorMessage = job.error ? `<p class="job-error">错误信息：${escapeHtml(job.error)}</p>` : "";
+  const videoLink = job.videoUrl
+    ? `<a href="${escapeHtml(job.videoUrl)}" target="_blank" rel="noreferrer">原视频</a>`
+    : "";
+  const cardAttributes = hasTranscript
+    ? ` data-viewer-url="${escapeHtml(transcriptLink.viewerUrl)}" role="button" tabindex="0" aria-label="打开文字稿：${jobTitle}"`
+    : "";
+  const jobActions = hasTranscript ? "" : '<div class="job-actions"><span class="pending-hint">等待转写完成…</span></div>';
+
+  return `
+    <article class="job-card${hasTranscript ? " has-transcript" : ""}" data-job-id="${escapeHtml(job.jobId)}"${cardAttributes}>
+      <div class="job-status-row">
+        <span class="status ${job.status}">${escapeHtml(status)}</span>
+        <span class="job-updated">${updatedAt}</span>
+      </div>
+      <h3>${jobTitle}</h3>
+      <div class="job-meta">
+        <span>作者：${author}</span>
+        <span>任务 ID：${jobId}</span>
+        ${videoLink ? `<span>${videoLink}</span>` : ""}
+      </div>
+      ${errorMessage}
+      ${jobActions}
+    </article>
+  `;
+}
+
+function createJobCardElement(job) {
+  const template = document.createElement("template");
+  template.innerHTML = buildJobCardHTML(job).trim();
+  return template.content.firstElementChild;
+}
+
+function mountInitialJobs(container) {
+  const entries = getSortedJobs();
+  const visibleEntries = entries.slice(0, MAX_VISIBLE_JOBS);
+
+  if (!visibleEntries.length) {
     container.innerHTML = '<p class="hint">暂无任务数据。</p>';
-    return { entries };
+  } else {
+    container.innerHTML = visibleEntries.map((job) => buildJobCardHTML(job)).join("");
   }
 
-  container.innerHTML = entries
-    .map((job) => {
-      const status = statusLabels[job.status] || job.status;
-      const transcriptLink = buildTranscriptLink(job.transcriptPath);
-      const author = job.author || "未知";
-      const jobTitle = job.title || job.jobId;
-      const hasTranscript = Boolean(transcriptLink);
-      const jobActions = hasTranscript
-        ? '<span class="job-open-hint">点击打开文字稿</span>'
-        : '<span class="pending-hint">任务仍在处理中</span>';
-      const errorMessage = job.error
-        ? `<p class="job-error">错误信息：${job.error}</p>`
-        : "";
-      const cardAttributes = hasTranscript
-        ? ` data-viewer-url="${transcriptLink.viewerUrl}" role="button" tabindex="0" aria-label="打开文字稿：${jobTitle}"`
-        : "";
-
-      return `
-        <article class="job-card${hasTranscript ? " has-transcript" : ""}"${cardAttributes}>
-          <div class="job-card-head">
-            <div class="job-status-row">
-              <span class="status ${job.status}">${status}</span>
-              <span class="job-updated">最近更新：${new Date(job.updatedAt).toLocaleString()}</span>
-            </div>
-            <h3>${jobTitle}</h3>
-            <div class="job-meta">
-              <span>作者：${author}</span>
-            </div>
-            ${errorMessage}
-          </div>
-          <div class="job-actions">
-            ${jobActions}
-          </div>
-        </article>
-      `;
-    })
-    .join("");
-
   setupJobCardInteractions(container);
-  return { entries };
+  updateMoreButton(entries.length > MAX_VISIBLE_JOBS);
+  setMoreButtonDisabled(false);
+}
+
+function showMoreJobs(container, onComplete) {
+  const entries = getSortedJobs();
+  const additionalEntries = entries.slice(MAX_VISIBLE_JOBS);
+  if (!additionalEntries.length) {
+    if (typeof onComplete === "function") {
+      onComplete();
+    }
+    return;
+  }
+
+  const existingIds = new Set(
+    Array.from(container.querySelectorAll(".job-card"), (card) => card.dataset.jobId),
+  );
+
+  const fragment = document.createDocumentFragment();
+  const newCards = [];
+
+  additionalEntries.forEach((job) => {
+    if (existingIds.has(job.jobId)) {
+      return;
+    }
+    const card = createJobCardElement(job);
+    card.classList.add("is-entering");
+    fragment.appendChild(card);
+    newCards.push(card);
+  });
+
+  if (!newCards.length) {
+    if (typeof onComplete === "function") {
+      onComplete();
+    }
+    return;
+  }
+
+  container.appendChild(fragment);
+
+  requestAnimationFrame(() => {
+    newCards.forEach((card) => {
+      card.classList.add("is-entered");
+    });
+  });
+
+  window.setTimeout(() => {
+    newCards.forEach((card) => {
+      card.classList.remove("is-entering", "is-entered");
+    });
+    if (typeof onComplete === "function") {
+      onComplete();
+    }
+  }, CARD_TRANSITION_MS);
+}
+
+function hideExtraJobs(container, onComplete) {
+  const allCards = Array.from(container.querySelectorAll(".job-card"));
+  const extraCards = allCards.slice(MAX_VISIBLE_JOBS);
+  if (!extraCards.length) {
+    if (typeof onComplete === "function") {
+      onComplete();
+    }
+    return;
+  }
+
+  extraCards.forEach((card) => {
+    card.classList.add("is-leaving");
+  });
+
+  window.setTimeout(() => {
+    extraCards.forEach((card) => card.remove());
+    if (typeof onComplete === "function") {
+      onComplete();
+    }
+  }, CARD_TRANSITION_MS);
+}
+
+function updateJobs(container, jobs) {
+  latestJobMap = jobs;
+  showingAllJobs = false;
+  mountInitialJobs(container);
 }
 
 function updateLookupResult(container, job) {
@@ -228,45 +400,153 @@ function setupWorkflowLink() {
   const link = document.getElementById("workflow-link");
   if (!link) return;
   link.href = `https://github.com/${siteInfo.owner}/${siteInfo.repo}/actions/workflows/transcript.yml`;
+
 }
 
 function setupJobCardInteractions(container) {
   if (!container || container.dataset.interactive === "true") return;
 
-  const activateCard = (card) => {
+  const activateCard = (card, viaKeyboard = false) => {
     if (!card) return;
     const targetUrl = card.dataset.viewerUrl;
-    if (targetUrl) {
+    if (!targetUrl) return;
+
+    const hasModifier = viaKeyboard
+      ? false
+      : Boolean(window.event && (window.event.metaKey || window.event.ctrlKey || window.event.shiftKey || window.event.altKey));
+
+    if (hasModifier) {
       window.open(targetUrl, "_blank", "noopener");
+    } else {
+      window.location.href = targetUrl;
     }
   };
 
   container.addEventListener("click", (event) => {
+    const linkTarget = event.target.closest("a");
+    if (linkTarget && container.contains(linkTarget)) {
+      return;
+    }
     const card = event.target.closest(".job-card[data-viewer-url]");
     if (!card || !container.contains(card)) return;
     activateCard(card);
   });
 
   container.addEventListener("keydown", (event) => {
+    if (event.target instanceof HTMLAnchorElement) {
+      return;
+    }
     if (event.key !== "Enter" && event.key !== " ") return;
     const card = event.target.closest(".job-card[data-viewer-url]");
     if (!card || !container.contains(card)) return;
     event.preventDefault();
-    activateCard(card);
+    activateCard(card, true);
   });
 
   container.dataset.interactive = "true";
 }
 
+function setupRevealOnScroll() {
+  const animatedElements = document.querySelectorAll("[data-animate]");
+  if (!animatedElements.length) {
+    return;
+  }
+
+  document.body.classList.add("is-animating");
+
+  if (!("IntersectionObserver" in window)) {
+    animatedElements.forEach((element) => element.classList.add("is-visible"));
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries, currentObserver) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          currentObserver.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.2 },
+  );
+
+  animatedElements.forEach((element) => observer.observe(element));
+}
+
+function setupSmoothScroll() {
+  document.querySelectorAll('[data-scroll][href^="#"]').forEach((link) => {
+    link.addEventListener("click", (event) => {
+      const targetId = link.getAttribute("href")?.slice(1);
+      const target = targetId ? document.getElementById(targetId) : null;
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+function updateMoreButton(hasMore) {
+  if (!jobsMoreContainer || !jobsMoreButton) return;
+  if (!hasMore) {
+    jobsMoreContainer.hidden = true;
+    return;
+  }
+
+  jobsMoreContainer.hidden = false;
+  jobsMoreButton.textContent = showingAllJobs ? "收起列表" : "查看更多";
+}
+
+function setMoreButtonDisabled(disabled) {
+  if (jobsMoreButton) {
+    jobsMoreButton.disabled = disabled;
+  }
+}
+
 async function bootstrap() {
   setupWorkflowLink();
+  setupSmoothScroll();
+  setupRevealOnScroll();
 
   const jobsContainer = document.getElementById("jobs");
   const resultContainer = document.getElementById("lookup-result");
   const form = document.getElementById("lookup-form");
+  jobsMoreContainer = document.getElementById("jobs-more");
+  jobsMoreButton = document.getElementById("jobs-more-button");
+
+  if (jobsMoreButton) {
+    jobsMoreButton.addEventListener("click", () => {
+      if (jobsMoreButton.disabled) {
+        return;
+      }
+
+      const totalJobs = getSortedJobs().length;
+      if (totalJobs <= MAX_VISIBLE_JOBS) {
+        return;
+      }
+
+      setMoreButtonDisabled(true);
+
+      if (showingAllJobs) {
+        showingAllJobs = false;
+        updateMoreButton(true);
+        hideExtraJobs(jobsContainer, () => {
+          setMoreButtonDisabled(false);
+          updateMoreButton(getSortedJobs().length > MAX_VISIBLE_JOBS);
+        });
+      } else {
+        showingAllJobs = true;
+        updateMoreButton(true);
+        showMoreJobs(jobsContainer, () => {
+          setMoreButtonDisabled(false);
+          updateMoreButton(getSortedJobs().length > MAX_VISIBLE_JOBS);
+        });
+      }
+    });
+  }
 
   let jobs = await fetchJobs();
-  renderJobs(jobsContainer, jobs.jobs || {});
+  updateJobs(jobsContainer, jobs.jobs || {});
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -282,7 +562,7 @@ async function bootstrap() {
     // Refresh jobs before lookup to capture latest changes.
     jobs = await fetchJobs();
     const jobMap = jobs.jobs || {};
-    renderJobs(jobsContainer, jobMap);
+    updateJobs(jobsContainer, jobMap);
     const job = jobMap[normalized.jobId];
     updateLookupResult(resultContainer, job ?? null);
   });
@@ -290,7 +570,7 @@ async function bootstrap() {
   // Auto refresh job list every 60 seconds.
   setInterval(async () => {
     jobs = await fetchJobs();
-    renderJobs(jobsContainer, jobs.jobs || {});
+    updateJobs(jobsContainer, jobs.jobs || {});
   }, 60_000);
 }
 

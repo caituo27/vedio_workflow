@@ -2,31 +2,84 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <title>视频文字稿生成器</title>
+    <title>视频文字稿工作流</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
-  <body class="app">
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="topbar-brand">
-          <span class="brand-badge">VW</span>
-          <div class="brand-meta">
-            <span class="brand-title">视频文字稿工作台</span>
-            <span class="brand-subtitle">随时掌握转写进度</span>
+  <body class="page">
+    <header class="nav" data-animate>
+      <div class="nav-brand">
+        <span class="nav-logo">VW</span>
+        <div class="nav-copy">
+          <span class="nav-title">视频文字稿工作流</span>
+          <span class="nav-subtitle">ingest → transform → deliver</span>
+        </div>
+      </div>
+      <nav class="nav-actions">
+        <a id="workflow-link" class="cta cta--primary" href="#" target="_blank" rel="noreferrer">触发流水线</a>
+      </nav>
+    </header>
+
+    <main class="main">
+      <section class="hero" data-animate>
+        <div class="hero-copy">
+          <h1>基于 Gemini 的全自动视频文字稿</h1>
+          <p>
+            从音频抓取到语义分段、Markdown 发布，一条命令即可完成。
+            支持 YouTube 与哔哩哔哩，自动同步到 GitHub Pages 展示。
+          </p>
+          <div class="hero-actions">
+            <a class="cta cta--primary" href="#lookup" data-scroll>查看转写状态</a>
+            <a class="cta cta--accent" href="#pipeline" data-scroll>了解流水线</a>
           </div>
         </div>
-        <div class="topbar-actions">
-          <a id="workflow-link" class="topbar-button" href="#" target="_blank" rel="noreferrer">新建任务</a>
+        <div class="hero-visual">
+          <div class="hero-flow">
+            <div class="hero-node">Ingest
+              <span>yt-dlp 下载音频</span>
+            </div>
+            <div class="hero-node">Transform
+              <span>Gemini 分段转写</span>
+            </div>
+            <div class="hero-node">Deliver
+              <span>Markdown &amp; Pages</span>
+            </div>
+          </div>
         </div>
-      </header>
+      </section>
 
-      <main class="content">
-        <section class="panel lookup-card">
-          <header class="panel-heading">
-            <h1>查询任务</h1>
-            <p>粘贴视频链接或 BV 号，快速定位转写进度。</p>
-          </header>
+      <section id="pipeline" class="section features" data-animate>
+        <header class="section-head">
+          <span class="eyebrow">Pipeline</span>
+          <h2>三阶段模块化设计</h2>
+          <p>按 ingest / transform / deliver 分层扩展，每一层都可以独立替换或调试。</p>
+        </header>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon">①</span>
+            <h3>Ingest · 下载提取</h3>
+            <p>yt-dlp 自动检测平台、下载最佳音轨并输出 `m4a/mp3`，配合 cookies 重试策略提升成功率。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">②</span>
+            <h3>Transform · 智能转写</h3>
+            <p>调用 Gemini 1.5 Flash，统一转为简体中文，自动分段并尝试修复 JSON 不规范输出。</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">③</span>
+            <h3>Deliver · 页面发布</h3>
+            <p>生成结构化 Markdown，更新任务索引，触发 GitHub Pages 全量部署，保证阅读体验一致。</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="lookup" class="section lookup" data-animate>
+        <header class="section-head">
+          <span class="eyebrow">Lookup</span>
+          <h2>查询任务状态</h2>
+          <p>粘贴视频链接或 BV 号，即刻检查是否已有转写结果。</p>
+        </header>
+        <div class="lookup-shell">
           <form id="lookup-form" class="lookup-form" autocomplete="off">
             <label class="sr-only" for="video-input">视频链接或 BV 号</label>
             <div class="input-group">
@@ -35,18 +88,37 @@
             </div>
           </form>
           <div id="lookup-result" class="lookup-result" hidden></div>
-        </section>
+        </div>
+      </section>
 
-        <section class="panel jobs-panel">
-          <div class="panel-heading">
-            <h2>视频列表</h2>
-            <span class="panel-subtitle">按更新时间排序，最新任务在最上方</span>
-          </div>
-          <div id="jobs" class="jobs"></div>
-        </section>
-      </main>
+      <section class="section status" data-animate>
+        <header class="section-head">
+          <span class="eyebrow">Jobs</span>
+          <h2>最近的文字稿任务</h2>
+          <p>按更新时间倒序排列，完成的任务可以立即打开阅读器。</p>
+        </header>
+        <div id="jobs" class="jobs-grid"></div>
+        <div id="jobs-more" class="jobs-more" hidden>
+          <button id="jobs-more-button" class="cta cta--ghost" type="button">查看更多</button>
+        </div>
+      </section>
 
-    </div>
+      <section class="section callout" data-animate>
+        <div class="callout-copy">
+          <h2>准备好运行了吗？</h2>
+          <p>Fork 仓库、配置 Gemini API 与 yt-dlp，几分钟内即可拥有属于你的自动化文字稿平台。</p>
+        </div>
+        <div class="callout-actions">
+          <a class="cta cta--primary" href="https://github.com/caituo27/vedio_workflow" target="_blank" rel="noreferrer">Fork 项目</a>
+          <a class="cta cta--ghost" href="https://github.com/caituo27/vedio_workflow/blob/main/README.md" target="_blank" rel="noreferrer">阅读 README</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer" data-animate>
+      <p>Made with Gemini · yt-dlp · GitHub Actions · GitHub Pages</p>
+    </footer>
+
     <script src="./app.js" type="module"></script>
   </body>
 </html>
