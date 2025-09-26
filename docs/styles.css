@@ -59,6 +59,7 @@ a {
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  margin-right: 1rem;
 }
 
 .nav-logo {
@@ -95,6 +96,7 @@ a {
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  margin-left: auto;
 }
 
 .cta {
@@ -561,25 +563,11 @@ a {
   white-space: nowrap;
 }
 
-body.is-animating [data-animate] {
-  opacity: 0;
-  transform: translateY(40px);
-}
 
-[data-animate] {
-  transition: opacity 0.8s ease, transform 0.8s ease;
-}
-
-body.is-animating [data-animate].is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 @media (max-width: 720px) {
   .nav {
-    flex-direction: column;
-    gap: 0.85rem;
-    align-items: flex-start;
+    flex-direction: row;
   }
 
   .hero {
@@ -591,7 +579,7 @@ body.is-animating [data-animate].is-visible {
   }
 
   .jobs-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 
   .callout {
@@ -601,6 +589,10 @@ body.is-animating [data-animate].is-visible {
 }
 
 @media (max-width: 480px) {
+  .main {
+    padding: clamp(1.5rem, 5vw, 2.5rem) clamp(1rem, 4vw, 1.5rem) 3rem;
+  }
+
   .input-group {
     flex-direction: column;
     padding: 0.6rem;
@@ -994,17 +986,36 @@ body.is-animating [data-animate].is-visible {
   }
 
   .viewer-thread {
-    padding: 1.85rem 1.55rem 2.4rem;
+    padding: 1.5rem 1.2rem 2rem;
+  }
+
+  .viewer-topbar h1 {
+    font-size: 1.1rem;
+  }
+
+  .viewer-thread-title {
+    font-size: clamp(1.5rem, 5vw, 2rem);
   }
 
   .viewer-thread-content {
-    font-size: 1.05rem;
+    font-family: sans-serif;
+    font-size: 1rem;
   }
 
   .viewer-paragraph {
     padding-right: 0;
   }
 }
+@media (max-width: 480px) {
+  .viewer-main {
+    padding: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .viewer-thread {
+    padding: 1.2rem 1rem 1.5rem;
+  }
+}
+
 ::selection {
   background: rgba(78, 155, 255, 0.25);
 }

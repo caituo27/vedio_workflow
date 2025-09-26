@@ -1,4 +1,4 @@
-# 视频文字稿工作流
+# 视频转文字
 
 TypeScript 驱动的自动化流水线，可从 YouTube 或哔哩哔哩提取音频，使用 Gemini 模型生成中文分段文字稿，并把结果同步至 GitHub Pages。该项目主要运行在 GitHub Actions，也支持本地调试和自托管。
 

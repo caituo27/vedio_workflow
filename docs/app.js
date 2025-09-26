@@ -446,46 +446,6 @@ function setupJobCardInteractions(container) {
   container.dataset.interactive = "true";
 }
 
-function setupRevealOnScroll() {
-  const animatedElements = document.querySelectorAll("[data-animate]");
-  if (!animatedElements.length) {
-    return;
-  }
-
-  document.body.classList.add("is-animating");
-
-  if (!("IntersectionObserver" in window)) {
-    animatedElements.forEach((element) => element.classList.add("is-visible"));
-    return;
-  }
-
-  const observer = new IntersectionObserver(
-    (entries, currentObserver) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          currentObserver.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.2 },
-  );
-
-  animatedElements.forEach((element) => observer.observe(element));
-}
-
-function setupSmoothScroll() {
-  document.querySelectorAll('[data-scroll][href^="#"]').forEach((link) => {
-    link.addEventListener("click", (event) => {
-      const targetId = link.getAttribute("href")?.slice(1);
-      const target = targetId ? document.getElementById(targetId) : null;
-      if (!target) return;
-      event.preventDefault();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  });
-}
-
 function updateMoreButton(hasMore) {
   if (!jobsMoreContainer || !jobsMoreButton) return;
   if (!hasMore) {
@@ -505,9 +465,6 @@ function setMoreButtonDisabled(disabled) {
 
 async function bootstrap() {
   setupWorkflowLink();
-  setupSmoothScroll();
-  setupRevealOnScroll();
-
   const jobsContainer = document.getElementById("jobs");
   const resultContainer = document.getElementById("lookup-result");
   const form = document.getElementById("lookup-form");
