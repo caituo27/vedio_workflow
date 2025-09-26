@@ -116,6 +116,15 @@
       "status": "completed",
       "updatedAt": "2025-09-25T12:11:34.381Z",
       "author": "李想"
+    },
+    "bilibili-bv1ldarzgems": {
+      "jobId": "bilibili-bv1ldarzgems",
+      "title": "【中英】乔布斯传奇演讲：改变无数人一生的三个故事-2005-stanford",
+      "videoUrl": "https://www.bilibili.com/video/BV1LDarzGEMS?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv1ldarzgems.md",
+      "status": "completed",
+      "updatedAt": "2025-09-26T08:28:10.191Z",
+      "author": "Gelai_AI"
     }
   }
 }
