@@ -55,7 +55,7 @@ export async function transcribeWithGemini(
     const mimeType = detectMimeType(audioPath);
 
     const client = new GoogleGenerativeAI(apiKey);
-    const model = client.getGenerativeModel({ model: "models/gemini-2.0-flash" });
+    const model = client.getGenerativeModel({ model: "models/gemini-1.5-flash" });
 
     const prompt = [
         "你将获得一段视频音频文件。",
@@ -73,13 +73,13 @@ export async function transcribeWithGemini(
                 role: "user",
                 parts: [
                     {
+                        text: prompt,
+                    },
+                    {
                         inlineData: {
                             mimeType,
                             data: base64Data,
                         },
-                    },
-                    {
-                        text: prompt,
                     },
                 ],
             },
