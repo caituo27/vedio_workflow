@@ -1033,3 +1033,16 @@ a {
 .page:has(.viewer-shell) .nav-actions {
   display: none;
 }
+
+.nav[data-animate].is-hidden {
+  transform: translateY(-100%);
+}
+
+.footer[data-animate].is-hidden {
+  transform: translateY(100%);
+}
+
+.nav[data-animate],
+.footer[data-animate] {
+  transition: transform 0.3s ease-in-out;
+}

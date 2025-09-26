@@ -272,3 +272,27 @@ function throttle(fn, wait) {
     }
   };
 }
+
+(function handleNavVisibility() {
+  let lastScrollY = window.scrollY;
+  const header = document.querySelector('.nav[data-animate]');
+  const footer = document.querySelector('.footer[data-animate]');
+  const threshold = 200; // Only hide after scrolling 200px
+
+  window.addEventListener('scroll', () => {
+    if (!header || !footer) {
+      return;
+    }
+
+    if (window.scrollY > lastScrollY && window.scrollY > threshold) {
+      // Scrolling down
+      header.classList.add('is-hidden');
+      footer.classList.add('is-hidden');
+    } else {
+      // Scrolling up
+      header.classList.remove('is-hidden');
+      footer.classList.remove('is-hidden');
+    }
+    lastScrollY = window.scrollY;
+  });
+})();
