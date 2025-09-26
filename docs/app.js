@@ -201,7 +201,7 @@ function normaliseInput(value) {
     };
   }
 
-  return null;
+  return { isTitleSearch: true, query: trimmed.toLowerCase() };
 }
 
 const HTML_ESCAPE_LOOKUP = {
@@ -388,6 +388,7 @@ function updateLookupResult(container, job) {
 
   container.hidden = false;
   container.innerHTML = `
+    <h3>${escapeHtml(job.title || '未命名视频')}</h3>
     <p>状态：<span class="status ${job.status}">${status}</span></p>
     <p>作者：${author}</p>
     <p>最近更新：${new Date(job.updatedAt).toLocaleString()}</p>
@@ -520,8 +521,17 @@ async function bootstrap() {
     jobs = await fetchJobs();
     const jobMap = jobs.jobs || {};
     updateJobs(jobsContainer, jobMap);
-    const job = jobMap[normalized.jobId];
-    updateLookupResult(resultContainer, job ?? null);
+
+    let foundJob = null;
+    if (normalized.isTitleSearch) {
+      const query = normalized.query;
+      const allJobs = Object.values(jobMap);
+      foundJob = allJobs.find(job => job.title && job.title.toLowerCase().includes(query));
+    } else {
+      foundJob = jobMap[normalized.jobId];
+    }
+
+    updateLookupResult(resultContainer, foundJob ?? null);
   });
 
   // Auto refresh job list every 60 seconds.

@@ -63,7 +63,7 @@ export async function transcribeWithGemini(
         "2. 按照语义在合适的位置分段，每个段落不超过400字；每个段落提供 JSON 对象包含 index、text 字段，可选 start/end (mm:ss)。",
         "3. 返回格式为 JSON：{ \"language\": 原音语言, \"segments\": [{ \"index\": 1, \"text\": \"...\", \"start\": \"00:00\", \"end\": \"00:30\" }] }",
         "4. 这份音频中如果包含带货广告信息，请识别并用删除线进行标记。",
-        "5. 所有文本使用简体中文。",
+        "5. 如果有语气词（比如“嗯”、“啊”）请删除。",
     ].join("\n");
 
     info("调用 Gemini 生成文字稿…");
