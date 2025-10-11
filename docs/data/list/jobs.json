@@ -134,6 +134,15 @@
       "status": "completed",
       "updatedAt": "2025-09-26T09:20:30.730Z",
       "author": "彼岸天空之城"
+    },
+    "youtube-lpkw6l-mzoe": {
+      "jobId": "youtube-lpkw6l-mzoe",
+      "title": "稀土战争：中美贸易战全面升级的背后",
+      "videoUrl": "https://youtu.be/lpkW6L_mzOE?si=1lfUkj1cSBpV0iai",
+      "transcriptPath": "data/word/youtube-lpkw6l-mzoe.md",
+      "status": "completed",
+      "updatedAt": "2025-10-11T09:10:25.441Z",
+      "author": "二爷故事"
     }
   }
 }
