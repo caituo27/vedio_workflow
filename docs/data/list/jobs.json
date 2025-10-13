@@ -143,6 +143,15 @@
       "status": "completed",
       "updatedAt": "2025-10-11T09:10:25.441Z",
       "author": "二爷故事"
+    },
+    "youtube-rufhujn4fhi": {
+      "jobId": "youtube-rufhujn4fhi",
+      "title": "立党讲座23：牛油果是不是智商税？转基因大豆油有没有危害？中餐有哪些垃圾食品？立党健康讲座开启！",
+      "videoUrl": "https://youtu.be/RufhuJn4FhI?si=nW_goJ_gyMAUaDwj",
+      "transcriptPath": "data/word/youtube-rufhujn4fhi.md",
+      "status": "completed",
+      "updatedAt": "2025-10-13T07:11:47.880Z",
+      "author": "立党 lidang"
     }
   }
 }
