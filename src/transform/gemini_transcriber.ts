@@ -17,6 +17,113 @@ export type TranscriptResult = {
     rawResponse: string;
 };
 
+type GeminiTranscriptPayload = Partial<TranscriptResult> & {
+    paragraphs?: Array<string | Partial<TranscriptSegment>>;
+    transcript?: string;
+    text?: string;
+    content?: string;
+};
+
+function chunkTextContent(text: string, maxLength = 400): string[] {
+    const cleaned = text.trim();
+    if (!cleaned) {
+        return [];
+    }
+
+    const chunks: string[] = [];
+    const paragraphs = cleaned
+        .split(/\n+/)
+        .map((paragraph) => paragraph.trim())
+        .filter((paragraph) => paragraph.length > 0);
+
+    for (const paragraph of paragraphs) {
+        let remaining = paragraph;
+
+        while (remaining.length > maxLength) {
+            const slice = remaining.slice(0, maxLength).trim();
+            if (slice) {
+                chunks.push(slice);
+            }
+            remaining = remaining.slice(maxLength).trim();
+        }
+
+        if (remaining) {
+            chunks.push(remaining);
+        }
+    }
+
+    if (!chunks.length) {
+        chunks.push(cleaned);
+    }
+
+    return chunks;
+}
+
+function coerceSegments(payload: GeminiTranscriptPayload): TranscriptSegment[] {
+    const collected: Partial<TranscriptSegment>[] = [];
+
+    if (Array.isArray(payload.segments) && payload.segments.length > 0) {
+        collected.push(...payload.segments);
+    }
+
+    if (!collected.length && Array.isArray(payload.paragraphs)) {
+        for (const paragraph of payload.paragraphs) {
+            if (typeof paragraph === "string") {
+                for (const chunk of chunkTextContent(paragraph)) {
+                    collected.push({ text: chunk });
+                }
+                continue;
+            }
+
+            if (paragraph && typeof paragraph === "object") {
+                const { text, start, end } = paragraph;
+                if (typeof text === "string") {
+                    const chunks = chunkTextContent(text);
+                    chunks.forEach((chunk, index) => {
+                        const entry: Partial<TranscriptSegment> = { text: chunk };
+                        if (index === 0 && start) {
+                            entry.start = start;
+                        }
+                        if (index === 0 && end) {
+                            entry.end = end;
+                        }
+                        collected.push(entry);
+                    });
+                }
+            }
+        }
+    }
+
+    if (!collected.length) {
+        const fallbackText = [payload.transcript, payload.text, payload.content]
+            .find((value): value is string => typeof value === "string" && value.trim().length > 0);
+
+        if (fallbackText) {
+            for (const chunk of chunkTextContent(fallbackText)) {
+                collected.push({ text: chunk });
+            }
+        }
+    }
+
+    return collected
+        .filter((segment) => typeof segment.text === "string" && segment.text.trim().length > 0)
+        .map((segment, index) => {
+            const normalised: TranscriptSegment = {
+                index: segment.index ?? index + 1,
+                text: segment.text!.trim(),
+            };
+
+            if (segment.start) {
+                normalised.start = segment.start;
+            }
+            if (segment.end) {
+                normalised.end = segment.end;
+            }
+
+            return normalised;
+        });
+}
+
 function detectMimeType(filePath: string): string {
     const ext = path.extname(filePath).toLowerCase();
     switch (ext) {
@@ -84,18 +191,21 @@ export async function transcribeWithGemini(
                 ],
             },
         ],
+        generationConfig: {
+            responseMimeType: "application/json",
+        },
     });
 
     const responseText = result.response.text();
     const jsonText = sanitiseJsonPayload(responseText);
 
-    let parsed: TranscriptResult;
+    let parsed: GeminiTranscriptPayload;
     try {
-        parsed = JSON.parse(jsonText) as TranscriptResult;
+        parsed = JSON.parse(jsonText) as GeminiTranscriptPayload;
     } catch (error) {
         try {
             const repaired = jsonrepair(jsonText);
-            parsed = JSON.parse(repaired) as TranscriptResult;
+            parsed = JSON.parse(repaired) as GeminiTranscriptPayload;
         } catch (repairError) {
             const reason = (repairError as Error).message || (error as Error).message;
             throw new Error(
@@ -104,19 +214,7 @@ export async function transcribeWithGemini(
         }
     }
 
-    const segments = (parsed.segments ?? []).map((segment, index) => {
-        const entry: TranscriptSegment = {
-            index: segment.index ?? index + 1,
-            text: segment.text ?? "",
-        };
-        if (segment.start) {
-            entry.start = segment.start;
-        }
-        if (segment.end) {
-            entry.end = segment.end;
-        }
-        return entry;
-    });
+    const segments = coerceSegments(parsed);
 
     if (!segments.length) {
         throw new Error(`Gemini 未返回有效的分段数据: ${responseText}`);
