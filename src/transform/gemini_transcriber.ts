@@ -141,12 +141,102 @@ function detectMimeType(filePath: string): string {
     }
 }
 
-function sanitiseJsonPayload(payload: string): string {
-    const trimmed = payload.trim();
-    if (trimmed.startsWith("```")) {
-        return trimmed.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+function stripCodeFences(payload: string): string {
+    return payload
+        .trim()
+        .replace(/^```(?:json)?/i, "")
+        .replace(/```$/i, "")
+        .trim();
+}
+
+function findJsonLikeSegments(payload: string): string[] {
+    const segments: string[] = [];
+    const stack: string[] = [];
+    let inString = false;
+    let escaped = false;
+    let startIndex = -1;
+
+    for (let index = 0; index < payload.length; index += 1) {
+        const char = payload[index];
+
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+            } else if (char === "\\") {
+                escaped = true;
+            } else if (char === "\"") {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (char === "\"") {
+            inString = true;
+            continue;
+        }
+
+        if (char === "{" || char === "[") {
+            if (stack.length === 0) {
+                startIndex = index;
+            }
+            stack.push(char);
+            continue;
+        }
+
+        if (char === "}" || char === "]") {
+            if (!stack.length) {
+                startIndex = -1;
+                continue;
+            }
+
+            const expected = stack[stack.length - 1];
+            if ((char === "}" && expected !== "{") || (char === "]" && expected !== "[")) {
+                stack.length = 0;
+                startIndex = -1;
+                continue;
+            }
+
+            stack.pop();
+            if (!stack.length && startIndex !== -1) {
+                segments.push(payload.slice(startIndex, index + 1));
+                startIndex = -1;
+            }
+        }
     }
-    return trimmed;
+
+    return segments;
+}
+
+function sanitiseJsonPayload(payload: string): string[] {
+    const trimmed = payload.trim();
+    const withoutFence = stripCodeFences(trimmed);
+    const candidates = new Set<string>();
+
+    const addCandidate = (candidate: string) => {
+        const value = candidate.trim();
+        if (value) {
+            candidates.add(value);
+        }
+    };
+
+    addCandidate(trimmed);
+    addCandidate(withoutFence);
+
+    const fencedBlocks = [...withoutFence.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)];
+    for (const match of fencedBlocks) {
+        const block = match[1];
+        if (typeof block === "string") {
+            addCandidate(block);
+        }
+    }
+
+    for (const source of [trimmed, withoutFence]) {
+        for (const segment of findJsonLikeSegments(source)) {
+            addCandidate(segment);
+        }
+    }
+
+    return [...candidates];
 }
 
 export async function transcribeWithGemini(
@@ -197,21 +287,51 @@ export async function transcribeWithGemini(
     });
 
     const responseText = result.response.text();
-    const jsonText = sanitiseJsonPayload(responseText);
+    const candidates = sanitiseJsonPayload(responseText);
 
-    let parsed: GeminiTranscriptPayload;
-    try {
-        parsed = JSON.parse(jsonText) as GeminiTranscriptPayload;
-    } catch (error) {
+    let parsed: GeminiTranscriptPayload | undefined;
+    let lastErrorMessage = "";
+
+    const attemptParse = (candidate: string): boolean => {
         try {
-            const repaired = jsonrepair(jsonText);
-            parsed = JSON.parse(repaired) as GeminiTranscriptPayload;
-        } catch (repairError) {
-            const reason = (repairError as Error).message || (error as Error).message;
-            throw new Error(
-                `解析 Gemini 返回结果失败: ${reason}\n原始响应: ${responseText}`,
-            );
+            parsed = JSON.parse(candidate) as GeminiTranscriptPayload;
+            return true;
+        } catch (primaryError) {
+            lastErrorMessage = (primaryError as Error).message;
         }
+
+        try {
+            const repaired = jsonrepair(candidate);
+            parsed = JSON.parse(repaired) as GeminiTranscriptPayload;
+            return true;
+        } catch (repairError) {
+            lastErrorMessage = (repairError as Error).message;
+        }
+
+        return false;
+    };
+
+    for (const candidate of candidates) {
+        if (candidate.startsWith("{") || candidate.startsWith("[")) {
+            if (attemptParse(candidate)) {
+                break;
+            }
+        }
+    }
+
+    if (!parsed) {
+        try {
+            const repaired = jsonrepair(responseText);
+            parsed = JSON.parse(repaired) as GeminiTranscriptPayload;
+        } catch (finalError) {
+            lastErrorMessage = (finalError as Error).message;
+        }
+    }
+
+    if (!parsed) {
+        throw new Error(
+            `解析 Gemini 返回结果失败: ${lastErrorMessage || "无法解析响应"}\n原始响应: ${responseText}`,
+        );
     }
 
     const segments = coerceSegments(parsed);
