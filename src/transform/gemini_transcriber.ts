@@ -207,6 +207,74 @@ function findJsonLikeSegments(payload: string): string[] {
     return segments;
 }
 
+function escapeLooseStringCharacters(payload: string): string {
+    let inString = false;
+    let escaped = false;
+    let result = "";
+
+    for (let index = 0; index < payload.length; index += 1) {
+        const char = payload[index];
+
+        if (inString) {
+            if (escaped) {
+                result += char;
+                escaped = false;
+                continue;
+            }
+
+            if (char === "\\") {
+                result += char;
+                escaped = true;
+                continue;
+            }
+
+            if (char === "\"") {
+                inString = false;
+                result += char;
+                continue;
+            }
+
+            if (char === "\r") {
+                if (payload[index + 1] === "\n") {
+                    result += "\\n";
+                    index += 1;
+                } else {
+                    result += "\\r";
+                }
+                continue;
+            }
+
+            if (char === "\n") {
+                result += "\\n";
+                continue;
+            }
+
+            if (char === "\u2028" || char === "\u2029") {
+                result += "\\n";
+                continue;
+            }
+
+            result += char;
+            continue;
+        }
+
+        result += char;
+
+        if (char === "\"") {
+            let backslashCount = 0;
+            for (let lookbehind = index - 1; lookbehind >= 0 && payload[lookbehind] === "\\"; lookbehind -= 1) {
+                backslashCount += 1;
+            }
+
+            if (backslashCount % 2 === 0) {
+                inString = true;
+            }
+        }
+    }
+
+    return result;
+}
+
 function sanitiseJsonPayload(payload: string): string[] {
     const trimmed = payload.trim();
     const withoutFence = stripCodeFences(trimmed);
@@ -237,6 +305,22 @@ function sanitiseJsonPayload(payload: string): string[] {
     }
 
     return [...candidates];
+}
+
+function* buildCandidateVariants(candidate: string): Generator<string> {
+    const seen = new Set<string>();
+    const normalised = candidate.trim();
+
+    if (!seen.has(normalised)) {
+        seen.add(normalised);
+        yield normalised;
+    }
+
+    const escaped = escapeLooseStringCharacters(normalised);
+    if (escaped !== normalised && !seen.has(escaped)) {
+        seen.add(escaped);
+        yield escaped;
+    }
 }
 
 export async function transcribeWithGemini(
@@ -293,19 +377,21 @@ export async function transcribeWithGemini(
     let lastErrorMessage = "";
 
     const attemptParse = (candidate: string): boolean => {
-        try {
-            parsed = JSON.parse(candidate) as GeminiTranscriptPayload;
-            return true;
-        } catch (primaryError) {
-            lastErrorMessage = (primaryError as Error).message;
-        }
+        for (const variant of buildCandidateVariants(candidate)) {
+            try {
+                parsed = JSON.parse(variant) as GeminiTranscriptPayload;
+                return true;
+            } catch (primaryError) {
+                lastErrorMessage = (primaryError as Error).message;
+            }
 
-        try {
-            const repaired = jsonrepair(candidate);
-            parsed = JSON.parse(repaired) as GeminiTranscriptPayload;
-            return true;
-        } catch (repairError) {
-            lastErrorMessage = (repairError as Error).message;
+            try {
+                const repaired = jsonrepair(variant);
+                parsed = JSON.parse(repaired) as GeminiTranscriptPayload;
+                return true;
+            } catch (repairError) {
+                lastErrorMessage = (repairError as Error).message;
+            }
         }
 
         return false;
