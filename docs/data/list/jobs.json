@@ -161,6 +161,15 @@
       "status": "completed",
       "updatedAt": "2025-10-13T09:13:16.560Z",
       "author": "权利者游戏"
+    },
+    "bilibili-bv1ve4czvekt": {
+      "jobId": "bilibili-bv1ve4czvekt",
+      "title": "付鹏：资产大洗牌，钱往哪里投？",
+      "videoUrl": "https://www.bilibili.com/video/BV1vE4czVEKt/?share_source=copy_web&vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv1ve4czvekt.md",
+      "status": "completed",
+      "updatedAt": "2025-10-14T12:56:28.161Z",
+      "author": "新经济学家智库"
     }
   }
 }
