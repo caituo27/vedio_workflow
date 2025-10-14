@@ -143,10 +143,50 @@ function detectMimeType(filePath: string): string {
 
 function sanitiseJsonPayload(payload: string): string {
     const trimmed = payload.trim();
-    if (trimmed.startsWith("```")) {
-        return trimmed.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+    const withoutCodeFence = trimmed
+        .replace(/^```(?:json)?/i, "")
+        .replace(/```$/i, "")
+        .replace(/```/g, "")
+        .trim();
+
+    const start = withoutCodeFence.indexOf("{");
+    if (start === -1) {
+        return withoutCodeFence;
     }
-    return trimmed;
+
+    let inString = false;
+    let escaped = false;
+    let depth = 0;
+    for (let index = start; index < withoutCodeFence.length; index += 1) {
+        const char = withoutCodeFence[index];
+
+        if (inString) {
+            if (escaped) {
+                escaped = false;
+            } else if (char === "\\") {
+                escaped = true;
+            } else if (char === "\"") {
+                inString = false;
+            }
+            continue;
+        }
+
+        if (char === "\"") {
+            inString = true;
+            continue;
+        }
+
+        if (char === "{") {
+            depth += 1;
+        } else if (char === "}") {
+            depth -= 1;
+            if (depth === 0) {
+                return withoutCodeFence.slice(start, index + 1);
+            }
+        }
+    }
+
+    return withoutCodeFence.slice(start);
 }
 
 export async function transcribeWithGemini(
