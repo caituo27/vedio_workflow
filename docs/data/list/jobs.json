@@ -170,6 +170,15 @@
       "status": "completed",
       "updatedAt": "2025-10-14T12:56:28.161Z",
       "author": "新经济学家智库"
+    },
+    "bilibili-bv1ucn1zvejh": {
+      "jobId": "bilibili-bv1ucn1zvejh",
+      "title": "官二代与女明星的往事，还原一个真实的娱乐圈！",
+      "videoUrl": "https://www.bilibili.com/video/BV1UCn1zVEjH/?share_source=copy_web&vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv1ucn1zvejh.md",
+      "status": "completed",
+      "updatedAt": "2025-10-15T06:17:28.773Z",
+      "author": "北海先生原创"
     }
   }
 }
