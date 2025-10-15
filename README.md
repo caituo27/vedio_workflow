@@ -1,10 +1,10 @@
 # 视频转文字
 
-TypeScript 驱动的自动化流水线，可从 YouTube 或哔哩哔哩提取音频，使用 Gemini 模型生成中文分段文字稿，并把结果同步至 GitHub Pages。该项目主要运行在 GitHub Actions，也支持本地调试和自托管。
+TypeScript 驱动的自动化流水线，可从 YouTube 或哔哩哔哩提取音频，通过 OpenRouter 调用 Gemini 模型生成中文分段文字稿，并把结果同步至 GitHub Pages。该项目主要运行在 GitHub Actions，也支持本地调试和自托管。
 
 ## 项目概览
 - **多平台输入**：支持 YouTube 链接、哔哩哔哩链接或直接输入 BV 号。
-- **语义分段文字稿**：Gemini 识别音频、翻译非中文内容，并按语义输出带时间标记的段落。
+- **语义分段文字稿**：通过 OpenRouter 调用 Gemini 识别音频、翻译非中文内容，并按语义输出带时间标记的段落。
 - **自动发布**：生成的 Markdown 文件写入 `docs/data/word/`，同时更新 `docs/data/list/jobs.json` 供前端展示，再由 Actions 推送至 Pages。
 - **可追踪状态**：状态索引保留最近一次成功记录，失败任务会被清理以避免污染列表。
 - **模块化管线**：按照 ingest → transform → deliver 划分，每个阶段在 `src/` 下独立维护，便于扩展和调试。
@@ -35,7 +35,7 @@ TypeScript 驱动的自动化流水线，可从 YouTube 或哔哩哔哩提取音
 - Node.js 20+
 - Python (供 `yt-dlp` 使用)
 - `ffmpeg`/`ffprobe`
-- Google Gemini API Key
+- OpenRouter API Key（使用 `google/gemini-2.0-flash-lite` 模型）
 - 可选：`yt-dlp` cookies（绕过登录校验时使用）
 
 ## 安装与本地调试
@@ -43,7 +43,7 @@ TypeScript 驱动的自动化流水线，可从 YouTube 或哔哩哔哩提取音
 npm install               # 安装依赖
 npm run build             # 编译 TypeScript 到 dist/
 DEV_VIDEO="https://youtu.be/xxxx" \
-GEMINI_API_KEY="your-key" \
+OPENROUTER_API_KEY="your-key" \
 npm run dev               # 直接运行开发脚本
 ```
 
@@ -57,7 +57,7 @@ node dist/cli/index.js "https://youtu.be/xxxx"
 输出的 Markdown 位于 `docs/data/word/<job-id>.md`，任务索引文件会同步更新。
 
 ## 环境变量
-- `GEMINI_API_KEY`：必填，用于调用 Gemini。
+- `OPENROUTER_API_KEY`：必填，用于通过 OpenRouter 调用 Gemini；兼容旧的 `GEMINI_API_KEY`。
 - `DEV_VIDEO`：本地调试脚本读取的视频链接或 BV 号。
 - `YT_DLP_COOKIES_PATH`：可选，指向 `yt-dlp` cookies 文件，应为绝对路径。
 - `YT_DLP_COOKIES` (Actions Secret)：若设置，工作流会写入临时文件并自动声明 `YT_DLP_COOKIES_PATH`。
@@ -67,7 +67,7 @@ node dist/cli/index.js "https://youtu.be/xxxx"
 node dist/cli/index.js <video> [options]
 
 选项：
-  -k, --api-key <key>   覆盖默认的 GEMINI_API_KEY
+  -k, --api-key <key>   覆盖默认的 OPENROUTER_API_KEY（兼容 GEMINI_API_KEY）
   -o, --output <dir>    自定义 Markdown 输出目录 (默认 docs/data/word)
 ```
 

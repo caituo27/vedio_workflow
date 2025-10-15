@@ -7,8 +7,10 @@ if (!video) {
 }
 
 const options: { apiKey?: string } = {};
-if (process.env.GEMINI_API_KEY) {
-    options.apiKey = process.env.GEMINI_API_KEY;
+const envApiKey =
+    process.env.OPENROUTER_API_KEY ?? process.env.GEMINI_API_KEY ?? process.env.OPENROUTER_API_KEY_V1;
+if (envApiKey) {
+    options.apiKey = envApiKey;
 }
 
 runPipeline(video, options).catch((error) => {
