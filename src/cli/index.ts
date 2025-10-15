@@ -21,9 +21,11 @@ export type PipelineOptions = {
 };
 
 export async function runPipeline(videoInput: string, options: PipelineOptions): Promise<void> {
-    const apiKey = options.apiKey ?? process.env.GEMINI_API_KEY;
+    const envApiKey =
+        process.env.OPENROUTER_API_KEY ?? process.env.GEMINI_API_KEY ?? process.env.OPENROUTER_API_KEY_V1;
+    const apiKey = options.apiKey ?? envApiKey;
     if (!apiKey) {
-        throw new Error("缺少 GEMINI_API_KEY，请通过环境变量或 --api-key 传入。");
+        throw new Error("缺少 OpenRouter API Key，请通过设置 OPENROUTER_API_KEY 或使用 --api-key 传入。");
     }
 
     const source = parseVideoSource(videoInput);
@@ -113,9 +115,12 @@ const program = new Command();
 
 program
     .name("vedio-workflow")
-    .description("下载视频、调用 Gemini 生成中文文字稿，并发布到 GitHub Pages。")
+    .description("下载视频、调用 OpenRouter (Gemini) 生成中文文字稿，并发布到 GitHub Pages。")
     .argument("<video>", "YouTube 链接、哔哩哔哩链接或 BV 号")
-    .option("-k, --api-key <key>", "Gemini API Key (默认读取 GEMINI_API_KEY 环境变量)")
+    .option(
+        "-k, --api-key <key>",
+        "OpenRouter API Key (默认读取 OPENROUTER_API_KEY，兼容 GEMINI_API_KEY 环境变量)",
+    )
     .option("-o, --output <dir>", "文字稿输出目录", "docs/data/word")
     .action(async (videoInput, options) => {
         try {
