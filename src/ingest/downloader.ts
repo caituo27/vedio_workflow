@@ -1,4 +1,5 @@
 import { promises as fs } from "node:fs";
+import type { Stats } from "node:fs";
 import path from "node:path";
 import tmp from "tmp";
 import { runCommand } from "../utils/process.js";
@@ -256,7 +257,7 @@ async function transcodeAudio(options: {
     sourcePath: string;
     targetPath: string;
     bitrate: number;
-}): Promise<fs.Stats> {
+}): Promise<Stats> {
     const bitrateKbps = Math.max(Math.round(options.bitrate / 1000), 1);
     const needsDownsample = options.bitrate <= LOW_BITRATE_THRESHOLD;
 
