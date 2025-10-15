@@ -391,7 +391,7 @@ export async function transcribeWithGemini(
             Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-            model: "google/gemini-2.0-flash-lite",
+            model: "google/gemini-2.0-flash-lite-preview-02-05",
             messages: [
                 {
                     role: "user",

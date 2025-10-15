@@ -35,7 +35,7 @@ TypeScript 驱动的自动化流水线，可从 YouTube 或哔哩哔哩提取音
 - Node.js 20+
 - Python (供 `yt-dlp` 使用)
 - `ffmpeg`/`ffprobe`
-- OpenRouter API Key（使用 `google/gemini-2.0-flash-lite` 模型）
+- OpenRouter API Key（使用 `google/gemini-2.0-flash-lite-preview-02-05` 模型）
 - 可选：`yt-dlp` cookies（绕过登录校验时使用）
 
 ## 安装与本地调试
