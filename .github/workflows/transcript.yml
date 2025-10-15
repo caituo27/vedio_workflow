@@ -60,6 +60,7 @@ jobs:
       - name: Run pipeline
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_GEMINI_MODEL: ${{ secrets.OPENROUTER_GEMINI_MODEL }}
         run: |
           node dist/cli/index.js "${{ inputs.video_url }}"
 

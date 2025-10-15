@@ -2,6 +2,12 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { jsonrepair } from "jsonrepair";
 import { info } from "../utils/logger.js";
+import {
+    BASE64_EXPANSION_RATIO,
+    MAX_AUDIO_BYTES_BEFORE_BASE64,
+    OPENROUTER_CHAT_INPUT_LIMIT_BYTES,
+    formatBytes,
+} from "../utils/openrouter_limits.js";
 
 export type TranscriptSegment = {
     index: number;
@@ -361,6 +367,17 @@ export async function transcribeWithGemini(
     },
 ): Promise<TranscriptResult> {
     const fileBuffer = await fs.readFile(audioPath);
+
+    if (fileBuffer.byteLength > MAX_AUDIO_BYTES_BEFORE_BASE64) {
+        const estimatedRequestBytes = Math.ceil(fileBuffer.byteLength * BASE64_EXPANSION_RATIO);
+        throw new Error(
+            `音频文件大小为 ${formatBytes(fileBuffer.byteLength)}，预计请求体积为 ${formatBytes(
+                estimatedRequestBytes,
+            )}，超过 OpenRouter ${formatBytes(
+                OPENROUTER_CHAT_INPUT_LIMIT_BYTES,
+            )} 限制，无法提交。请尝试缩短视频时长或手动压缩音频。`,
+        );
+    }
     const base64Data = fileBuffer.toString("base64");
     const mimeType = detectMimeType(audioPath);
 
