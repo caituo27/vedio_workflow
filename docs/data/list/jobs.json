@@ -188,6 +188,15 @@
       "status": "completed",
       "updatedAt": "2025-10-15T03:34:12.065Z",
       "author": "北海先生原创"
+    },
+    "bilibili-bv1mjp3zdeyv": {
+      "jobId": "bilibili-bv1mjp3zdeyv",
+      "title": "陪伴将军13年后，揭秘朝鲜真实的上流社会！",
+      "videoUrl": "https://www.bilibili.com/video/BV1Mjp3zDEYV/?share_source=copy_web&vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
+      "transcriptPath": "data/word/bilibili-bv1mjp3zdeyv.md",
+      "status": "completed",
+      "updatedAt": "2025-10-15T03:39:42.700Z",
+      "author": "北海先生原创"
     }
   }
 }
