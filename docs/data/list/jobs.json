@@ -170,6 +170,15 @@
       "status": "completed",
       "updatedAt": "2025-10-14T12:56:28.161Z",
       "author": "新经济学家智库"
+    },
+    "bilibili-bv1ed4uzweu4": {
+      "jobId": "bilibili-bv1ed4uzweu4",
+      "title": "【339] 纳瓦尔：赚钱真的不是靠运气！",
+      "videoUrl": "https://www.bilibili.com/video/BV1Ed4UzWEu4/?share_source=copy_web",
+      "transcriptPath": "data/word/bilibili-bv1ed4uzweu4.md",
+      "status": "completed",
+      "updatedAt": "2025-10-15T01:52:04.735Z",
+      "author": "YouTube深度油管"
     }
   }
 }
