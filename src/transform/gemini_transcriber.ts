@@ -349,12 +349,15 @@ type OpenRouterResponse = {
     }>;
 };
 
+export const DEFAULT_OPENROUTER_GEMINI_MODEL = "google/gemini-2.0-flash-lite-preview";
+
 export async function transcribeWithGemini(
     apiKey: string,
     audioPath: string,
     options: {
         title: string;
         durationSeconds?: number;
+        model?: string;
     },
 ): Promise<TranscriptResult> {
     const fileBuffer = await fs.readFile(audioPath);
@@ -383,7 +386,9 @@ export async function transcribeWithGemini(
         },
     ];
 
-    info("调用 OpenRouter (Gemini) 生成文字稿…");
+    const modelId = options.model?.trim() || DEFAULT_OPENROUTER_GEMINI_MODEL;
+
+    info(`调用 OpenRouter (Gemini: ${modelId}) 生成文字稿…`);
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -391,7 +396,7 @@ export async function transcribeWithGemini(
             Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-            model: "google/gemini-2.0-flash-lite-preview-02-05",
+            model: modelId,
             messages: [
                 {
                     role: "user",

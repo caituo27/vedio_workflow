@@ -35,7 +35,7 @@ TypeScript 驱动的自动化流水线，可从 YouTube 或哔哩哔哩提取音
 - Node.js 20+
 - Python (供 `yt-dlp` 使用)
 - `ffmpeg`/`ffprobe`
-- OpenRouter API Key（使用 `google/gemini-2.0-flash-lite-preview-02-05` 模型）
+- OpenRouter API Key（默认使用 `google/gemini-2.0-flash-lite-preview` 模型，可通过环境变量覆盖）
 - 可选：`yt-dlp` cookies（绕过登录校验时使用）
 
 ## 安装与本地调试
@@ -58,6 +58,7 @@ node dist/cli/index.js "https://youtu.be/xxxx"
 
 ## 环境变量
 - `OPENROUTER_API_KEY`：必填，用于通过 OpenRouter 调用 Gemini；兼容旧的 `GEMINI_API_KEY`。
+- `OPENROUTER_GEMINI_MODEL`：可选，OpenRouter 模型 ID（默认 `google/gemini-2.0-flash-lite-preview`，兼容 `GEMINI_MODEL_ID` 和 `OPENROUTER_MODEL_ID`）。
 - `DEV_VIDEO`：本地调试脚本读取的视频链接或 BV 号。
 - `YT_DLP_COOKIES_PATH`：可选，指向 `yt-dlp` cookies 文件，应为绝对路径。
 - `YT_DLP_COOKIES` (Actions Secret)：若设置，工作流会写入临时文件并自动声明 `YT_DLP_COOKIES_PATH`。
@@ -68,6 +69,7 @@ node dist/cli/index.js <video> [options]
 
 选项：
   -k, --api-key <key>   覆盖默认的 OPENROUTER_API_KEY（兼容 GEMINI_API_KEY）
+  -m, --model <id>      指定 OpenRouter 模型 ID（默认 google/gemini-2.0-flash-lite-preview）
   -o, --output <dir>    自定义 Markdown 输出目录 (默认 docs/data/word)
 ```
 
