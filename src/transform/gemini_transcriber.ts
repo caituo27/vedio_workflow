@@ -349,7 +349,7 @@ type OpenRouterResponse = {
     }>;
 };
 
-export const DEFAULT_OPENROUTER_GEMINI_MODEL = "google/gemini-2.0-flash-lite-preview";
+export const DEFAULT_OPENROUTER_GEMINI_MODEL = "google/gemini-2.0-flash-lite-001";
 
 export async function transcribeWithGemini(
     apiKey: string,
