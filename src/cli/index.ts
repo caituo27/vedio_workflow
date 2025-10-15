@@ -3,9 +3,16 @@ import { Command } from "commander";
 import path from "node:path";
 import { promises as fs } from "node:fs";
 import { parseVideoSource, buildJobId } from "../utils/video.js";
-import { success, error as logError } from "../utils/logger.js";
+import { success, error as logError, info } from "../utils/logger.js";
 import { downloadAudio } from "../ingest/downloader.js";
-import { transcribeWithGemini, DEFAULT_OPENROUTER_GEMINI_MODEL } from "../transform/gemini_transcriber.js";
+import {
+    transcribeWithGemini,
+    transcribeWithGoogleGemini,
+    DEFAULT_OPENROUTER_GEMINI_MODEL,
+    DEFAULT_GOOGLE_GEMINI_MODEL,
+} from "../transform/gemini_transcriber.js";
+import type { TranscriptResult } from "../transform/gemini_transcriber.js";
+import { MAX_AUDIO_BYTES_BEFORE_BASE64, formatBytes } from "../utils/openrouter_limits.js";
 import { deliverMarkdown } from "../deliver/markdown_writer.js";
 import {
     markProcessing,
@@ -22,16 +29,14 @@ export type PipelineOptions = {
 };
 
 export async function runPipeline(videoInput: string, options: PipelineOptions): Promise<void> {
-    const envApiKey =
-        process.env.OPENROUTER_API_KEY ?? process.env.GEMINI_API_KEY ?? process.env.OPENROUTER_API_KEY_V1;
-    const apiKey = options.apiKey ?? envApiKey;
-    if (!apiKey) {
-        throw new Error("缺少 OpenRouter API Key，请通过设置 OPENROUTER_API_KEY 或使用 --api-key 传入。");
+    const openrouterApiKey = options.apiKey ?? process.env.OPENROUTER_API_KEY ?? undefined;
+    const geminiApiKey = process.env.GEMINI_API_KEY ?? undefined;
+
+    if (!openrouterApiKey && !geminiApiKey) {
+        throw new Error("缺少 OPENROUTER_API_KEY 或 GEMINI_API_KEY，请至少提供其中一个。");
     }
 
-    const envModel =
-        process.env.OPENROUTER_GEMINI_MODEL ?? process.env.GEMINI_MODEL_ID ?? process.env.OPENROUTER_MODEL_ID;
-    const model = options.model ?? envModel ?? DEFAULT_OPENROUTER_GEMINI_MODEL;
+    const model = options.model ?? process.env.GEMINI_MODEL_ID ?? undefined;
 
     const source = parseVideoSource(videoInput);
     const jobId = buildJobId(source);
@@ -57,15 +62,44 @@ export async function runPipeline(videoInput: string, options: PipelineOptions):
 
         await updateJob(processingRecord);
 
-        const transcriptOptions: { title: string; durationSeconds?: number; model?: string } = {
+        const transcriptOptions: {
+            title: string;
+            durationSeconds?: number;
+            model?: string;
+        } = {
             title: downloadResult.title,
         };
         if (typeof downloadResult.durationSeconds === "number") {
             transcriptOptions.durationSeconds = downloadResult.durationSeconds;
         }
-        transcriptOptions.model = model;
+        if (model) {
+            transcriptOptions.model = model;
+        }
 
-        const transcript = await transcribeWithGemini(apiKey, downloadResult.audioPath, transcriptOptions);
+        const audioStats = await fs.stat(downloadResult.audioPath);
+        const audioBytes = audioStats.size;
+        const canUseOpenRouter = Boolean(openrouterApiKey) && audioBytes <= MAX_AUDIO_BYTES_BEFORE_BASE64;
+
+        let transcript: TranscriptResult;
+        if (canUseOpenRouter && openrouterApiKey) {
+            transcript = await transcribeWithGemini(openrouterApiKey, downloadResult.audioPath, transcriptOptions);
+        } else {
+            if (openrouterApiKey && audioBytes > MAX_AUDIO_BYTES_BEFORE_BASE64) {
+                info(
+                    `音频文件大小为 ${formatBytes(audioBytes)}，超过 OpenRouter ${formatBytes(
+                        MAX_AUDIO_BYTES_BEFORE_BASE64,
+                    )} 限制，改用 Google Gemini。`,
+                );
+            } else if (!openrouterApiKey) {
+                info("未检测到 OPENROUTER_API_KEY，使用 Google Gemini。");
+            }
+
+            if (!geminiApiKey) {
+                throw new Error("缺少 GEMINI_API_KEY，无法调用 Google Gemini 转写。");
+            }
+
+            transcript = await transcribeWithGoogleGemini(geminiApiKey, downloadResult.audioPath, transcriptOptions);
+        }
 
         const deliverOptions: {
             jobId: string;
@@ -125,11 +159,11 @@ program
     .argument("<video>", "YouTube 链接、哔哩哔哩链接或 BV 号")
     .option(
         "-k, --api-key <key>",
-        "OpenRouter API Key (默认读取 OPENROUTER_API_KEY，兼容 GEMINI_API_KEY 环境变量)",
+        "OpenRouter API Key (默认读取 OPENROUTER_API_KEY；若缺失或音频超限，将尝试使用 GEMINI_API_KEY)",
     )
     .option(
         "-m, --model <id>",
-        `OpenRouter 模型 ID (默认 ${DEFAULT_OPENROUTER_GEMINI_MODEL}，支持 OPENROUTER_GEMINI_MODEL 环境变量)`,
+        `指定模型 ID（OpenRouter 默认 ${DEFAULT_OPENROUTER_GEMINI_MODEL}，Gemini 默认 ${DEFAULT_GOOGLE_GEMINI_MODEL}）`,
     )
     .option("-o, --output <dir>", "文字稿输出目录", "docs/data/word")
     .action(async (videoInput, options) => {

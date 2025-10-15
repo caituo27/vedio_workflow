@@ -355,98 +355,34 @@ type OpenRouterResponse = {
     }>;
 };
 
+type GoogleGenerativeResponse = {
+    candidates?: Array<{
+        content?: {
+            parts?: Array<{ text?: string }>;
+        };
+    }>;
+};
+
+export type GeminiApiKeys = {
+    openrouterApiKey?: string;
+    geminiApiKey?: string;
+};
+
 export const DEFAULT_OPENROUTER_GEMINI_MODEL = "google/gemini-2.0-flash-lite-001";
+export const DEFAULT_GOOGLE_GEMINI_MODEL = "gemini-2.0-flash-lite";
 
-export async function transcribeWithGemini(
-    apiKey: string,
-    audioPath: string,
-    options: {
-        title: string;
-        durationSeconds?: number;
-        model?: string;
-    },
-): Promise<TranscriptResult> {
-    const fileBuffer = await fs.readFile(audioPath);
-
-    if (fileBuffer.byteLength > MAX_AUDIO_BYTES_BEFORE_BASE64) {
-        const estimatedRequestBytes = Math.ceil(fileBuffer.byteLength * BASE64_EXPANSION_RATIO);
-        throw new Error(
-            `音频文件大小为 ${formatBytes(fileBuffer.byteLength)}，预计请求体积为 ${formatBytes(
-                estimatedRequestBytes,
-            )}，超过 OpenRouter ${formatBytes(
-                OPENROUTER_CHAT_INPUT_LIMIT_BYTES,
-            )} 限制，无法提交。请尝试缩短视频时长或手动压缩音频。`,
-        );
-    }
-    const base64Data = fileBuffer.toString("base64");
-    const mimeType = detectMimeType(audioPath);
-
-    const audioFormat = mapMimeTypeToAudioFormat(mimeType);
-
-    const prompt = [
+function buildTranscriptPrompt(): string {
+    return [
         "你将获得一段视频音频文件。",
         "1. 首先识别音频内容，若原音频不是中文，请将内容翻译为中文。",
         "2. 按照语义在合适的位置分段，每个段落不超过400字；每个段落提供 JSON 对象包含 index、text 字段，可选 start/end (mm:ss)。",
-        "3. 返回格式为 JSON：{ \"language\": 原音语言, \"segments\": [{ \"index\": 1, \"text\": \"...\", \"start\": \"00:00\", \"end\": \"00:30\" }] }",
+        "3. 返回格式：JSON：{ \"language\": 原音语言, \"segments\": [{ \"index\": 1, \"text\": \"...\", \"start\": \"00:00\", \"end\": \"00:30\" }] }",
         "4. 这份音频中如果包含带货广告信息，请识别并用删除线进行标记。",
         "5. 如果有语气词（比如“嗯”、“啊”）请删除。",
     ].join("\n");
+}
 
-    const content: OpenRouterContentBlock[] = [
-        { type: "text", text: prompt },
-        {
-            type: "input_audio",
-            audio: {
-                data: base64Data,
-                ...(audioFormat ? { format: audioFormat } : {}),
-            },
-        },
-    ];
-
-    const modelId = options.model?.trim() || DEFAULT_OPENROUTER_GEMINI_MODEL;
-
-    info(`调用 OpenRouter (Gemini: ${modelId}) 生成文字稿…`);
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-            model: modelId,
-            messages: [
-                {
-                    role: "user",
-                    content,
-                },
-            ],
-            response_format: { type: "json_object" },
-        }),
-    });
-
-    if (!response.ok) {
-        const errorPayload = await response.text();
-        throw new Error(`OpenRouter 请求失败: ${response.status} ${response.statusText}\n${errorPayload}`);
-    }
-
-    const payload = (await response.json()) as OpenRouterResponse;
-    const firstChoice = payload.choices?.[0];
-    const messageContent = firstChoice?.message?.content;
-
-    let responseText = "";
-    if (Array.isArray(messageContent)) {
-        responseText = messageContent
-            .map((block) => block.text ?? "")
-            .join("\n")
-            .trim();
-    } else if (typeof messageContent === "string") {
-        responseText = messageContent.trim();
-    }
-
-    if (!responseText) {
-        throw new Error("OpenRouter 返回结果为空，无法解析文字稿");
-    }
-
+function parseGeminiTranscriptResponse(responseText: string, providerLabel: string): TranscriptResult {
     const candidates = sanitiseJsonPayload(responseText);
 
     let parsed: GeminiTranscriptPayload | undefined;
@@ -492,14 +428,14 @@ export async function transcribeWithGemini(
 
     if (!parsed) {
         throw new Error(
-            `解析 OpenRouter (Gemini) 返回结果失败: ${lastErrorMessage || "无法解析响应"}\n原始响应: ${responseText}`,
+            `解析 ${providerLabel} 返回结果失败: ${lastErrorMessage || "无法解析响应"}\n原始响应: ${responseText}`,
         );
     }
 
     const segments = coerceSegments(parsed);
 
     if (!segments.length) {
-        throw new Error(`OpenRouter (Gemini) 未返回有效的分段数据: ${responseText}`);
+        throw new Error(`${providerLabel} 未返回有效的分段数据: ${responseText}`);
     }
 
     return {
@@ -507,4 +443,156 @@ export async function transcribeWithGemini(
         segments,
         rawResponse: responseText,
     };
+}
+
+export async function transcribeWithGemini(
+    apiKey: string,
+    audioPath: string,
+    options: {
+        title: string;
+        durationSeconds?: number;
+        model?: string;
+    },
+): Promise<TranscriptResult> {
+    const fileBuffer = await fs.readFile(audioPath);
+
+    if (fileBuffer.byteLength > MAX_AUDIO_BYTES_BEFORE_BASE64) {
+        const estimatedRequestBytes = Math.ceil(fileBuffer.byteLength * BASE64_EXPANSION_RATIO);
+        throw new Error(
+            `音频文件大小为 ${formatBytes(fileBuffer.byteLength)}，预计请求体积为 ${formatBytes(
+                estimatedRequestBytes,
+            )}，超过 OpenRouter ${formatBytes(
+                OPENROUTER_CHAT_INPUT_LIMIT_BYTES,
+            )} 限制，无法提交。请尝试缩短视频时长或手动压缩音频。`,
+        );
+    }
+
+    const base64Data = fileBuffer.toString("base64");
+    const mimeType = detectMimeType(audioPath);
+    const audioFormat = mapMimeTypeToAudioFormat(mimeType);
+    const prompt = buildTranscriptPrompt();
+
+    const content: OpenRouterContentBlock[] = [
+        { type: "text", text: prompt },
+        {
+            type: "input_audio",
+            audio: {
+                data: base64Data,
+                ...(audioFormat ? { format: audioFormat } : {}),
+            },
+        },
+    ];
+
+    const modelId = options.model?.trim() || DEFAULT_OPENROUTER_GEMINI_MODEL;
+
+    info(`调用 OpenRouter (Gemini: ${modelId}) 生成文字稿…`);
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+            model: modelId,
+            messages: [
+                {
+                    role: "user",
+                    content,
+                },
+            ],
+            response_format: { type: "json_object" },
+        }),
+    });
+
+    if (!response.ok) {
+        const errorPayload = await response.text();
+        throw new Error(`OpenRouter 请求失败: ${response.status} ${response.statusText}
+${errorPayload}`);
+    }
+
+    const payload = (await response.json()) as OpenRouterResponse;
+    const firstChoice = payload.choices?.[0];
+    const messageContent = firstChoice?.message?.content;
+
+    let responseText = "";
+    if (Array.isArray(messageContent)) {
+        responseText = messageContent
+            .map((block) => block.text ?? "")
+            .join("\n")
+            .trim();
+    } else if (typeof messageContent === "string") {
+        responseText = messageContent.trim();
+    }
+
+    if (!responseText) {
+        throw new Error("OpenRouter 返回结果为空，无法解析文字稿");
+    }
+
+    return parseGeminiTranscriptResponse(responseText, "OpenRouter (Gemini)");
+}
+
+export async function transcribeWithGoogleGemini(
+    apiKey: string,
+    audioPath: string,
+    options: {
+        title: string;
+        durationSeconds?: number;
+        model?: string;
+    },
+): Promise<TranscriptResult> {
+    const fileBuffer = await fs.readFile(audioPath);
+    const base64Data = fileBuffer.toString("base64");
+    const mimeType = detectMimeType(audioPath);
+    const prompt = buildTranscriptPrompt();
+    const modelId = options.model?.trim() || DEFAULT_GOOGLE_GEMINI_MODEL;
+
+    info(`调用 Google Gemini (${modelId}) 生成文字稿…`);
+    const url = new URL(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent`,
+    );
+    url.searchParams.set("key", apiKey);
+
+    const response = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            contents: [
+                {
+                    role: "user",
+                    parts: [
+                        { text: prompt },
+                        {
+                            inlineData: {
+                                mimeType,
+                                data: base64Data,
+                            },
+                        },
+                    ],
+                },
+            ],
+            responseMimeType: "application/json",
+        }),
+    });
+
+    if (!response.ok) {
+        const errorPayload = await response.text();
+        throw new Error(`Google Gemini 请求失败: ${response.status} ${response.statusText}
+${errorPayload}`);
+    }
+
+    const payload = (await response.json()) as GoogleGenerativeResponse;
+    const firstCandidate = payload.candidates?.[0];
+    const parts = firstCandidate?.content?.parts ?? [];
+    const responseText = parts
+        .map((part) => part.text ?? "")
+        .join("\n")
+        .trim();
+
+    if (!responseText) {
+        throw new Error("Google Gemini 返回结果为空，无法解析文字稿");
+    }
+
+    return parseGeminiTranscriptResponse(responseText, "Google Gemini");
 }
