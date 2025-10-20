@@ -188,6 +188,15 @@
       "status": "completed",
       "updatedAt": "2025-10-16T08:05:38.807Z",
       "author": "老蛮频道"
+    },
+    "youtube-z90fkua7fbw": {
+      "jobId": "youtube-z90fkua7fbw",
+      "title": "杨振宁史上最精彩的演讲，没有之一，全程高能，太吸引人了！顶级物理学家的思维，究竟与普通人有多大差距",
+      "videoUrl": "https://youtu.be/Z90fkUa7fbw?si=mJdwuUuyC1YeqiXA",
+      "transcriptPath": "data/word/youtube-z90fkua7fbw.md",
+      "status": "completed",
+      "updatedAt": "2025-10-20T01:03:31.715Z",
+      "author": "Dawang's World View"
     }
   }
 }
