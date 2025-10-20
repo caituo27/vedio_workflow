@@ -197,6 +197,15 @@
       "status": "completed",
       "updatedAt": "2025-10-20T01:03:31.715Z",
       "author": "Dawang's World View"
+    },
+    "youtube-7ieiv2zfz60": {
+      "jobId": "youtube-7ieiv2zfz60",
+      "title": "杨振宁逝世！立党带你总结杨振宁的成功人生！宇称不守恒、Yang-Mills理论是如何诞生的？如何做出一流顶级学术成果？杨振宁、李政道、陈省身这些顶级科学家是如何诞生的？",
+      "videoUrl": "https://youtu.be/7IeIV2ZFZ60?si=Z919vOt70q-HLjZM",
+      "transcriptPath": "data/word/youtube-7ieiv2zfz60.md",
+      "status": "completed",
+      "updatedAt": "2025-10-20T02:28:21.911Z",
+      "author": "立党 lidang"
     }
   }
 }
