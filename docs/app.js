@@ -251,7 +251,7 @@ function buildJobCardHTML(job) {
     : "";
   
   const deleteWorkflowUrl = `https://github.com/${siteInfo.owner}/${siteInfo.repo}/actions/workflows/delete-transcript.yml`;
-  const deleteButton = `<button class="btn-delete" data-video-url="${escapeHtml(job.videoUrl || '')}" data-delete-workflow="${deleteWorkflowUrl}" title="删除此文字稿">🗑️ 删除</button>`;
+  const deleteButton = `<button class="btn-delete" data-video-url="${escapeHtml(job.videoUrl || '')}" data-delete-workflow="${deleteWorkflowUrl}" title="删除此文字稿">删除</button>`;
   const jobActions = hasTranscript 
     ? `<div class="job-actions">${deleteButton}</div>` 
     : '<div class="job-actions"><span class="pending-hint">等待转写完成…</span></div>';
