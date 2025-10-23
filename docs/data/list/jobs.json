@@ -233,6 +233,15 @@
       "status": "completed",
       "updatedAt": "2025-10-23T11:06:20.828Z",
       "author": "无处安放的小A"
+    },
+    "bilibili-bv11thnzgevq": {
+      "jobId": "bilibili-bv11thnzgevq",
+      "title": "《史蒂夫·乔布斯传》01:乔布斯为什么那么具有争议？",
+      "videoUrl": "https://www.bilibili.com/video/BV11tHnzgEvQ/",
+      "transcriptPath": "data/word/bilibili-bv11thnzgevq.md",
+      "status": "completed",
+      "updatedAt": "2025-10-23T11:22:13.873Z",
+      "author": "无处安放的小A"
     }
   }
 }
