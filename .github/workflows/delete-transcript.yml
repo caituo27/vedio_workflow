@@ -1,0 +1,72 @@
+name: Delete transcript
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: "YouTube 链接或哔哩哔哩 BV 号"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  delete-transcript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Delete transcript
+        run: |
+          node dist/cli/index.js delete "${{ inputs.video_url }}"
+
+      - name: Commit deletion
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if git status --short | grep -E '^\s*[AMDR].*docs/' > /dev/null; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/
+            git commit -m "automation: delete transcript" || echo "No changes to commit"
+            git push
+          else
+            echo "No documentation changes to commit"
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: delete-transcript
+    runs-on: ubuntu-latest
+    if: needs.delete-transcript.result == 'success'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
