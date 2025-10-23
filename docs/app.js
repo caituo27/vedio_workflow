@@ -249,7 +249,12 @@ function buildJobCardHTML(job) {
   const cardAttributes = hasTranscript
     ? ` data-viewer-url="${escapeHtml(transcriptLink.viewerUrl)}" role="button" tabindex="0" aria-label="打开文字稿：${jobTitle}"`
     : "";
-  const jobActions = hasTranscript ? "" : '<div class="job-actions"><span class="pending-hint">等待转写完成…</span></div>';
+  
+  const deleteWorkflowUrl = `https://github.com/${siteInfo.owner}/${siteInfo.repo}/actions/workflows/delete-transcript.yml`;
+  const deleteButton = `<button class="btn-delete" data-video-url="${escapeHtml(job.videoUrl || '')}" data-delete-workflow="${deleteWorkflowUrl}" title="删除此文字稿">🗑️ 删除</button>`;
+  const jobActions = hasTranscript 
+    ? `<div class="job-actions">${deleteButton}</div>` 
+    : '<div class="job-actions"><span class="pending-hint">等待转写完成…</span></div>';
 
   return `
     <article class="job-card${hasTranscript ? " has-transcript" : ""}" data-job-id="${escapeHtml(job.jobId)}"${cardAttributes}>
@@ -428,6 +433,19 @@ function setupJobCardInteractions(container) {
   };
 
   container.addEventListener("click", (event) => {
+    // Handle delete button clicks
+    const deleteBtn = event.target.closest(".btn-delete");
+    if (deleteBtn && container.contains(deleteBtn)) {
+      event.stopPropagation();
+      const videoUrl = deleteBtn.dataset.videoUrl;
+      const workflowUrl = deleteBtn.dataset.deleteWorkflow;
+      
+      if (confirm(`确定要删除此文字稿吗？\n\n视频: ${videoUrl}\n\n点击确定后将跳转到 GitHub Actions 页面，需要手动触发删除工作流。`)) {
+        window.open(workflowUrl, "_blank", "noopener");
+      }
+      return;
+    }
+
     const linkTarget = event.target.closest("a");
     if (linkTarget && container.contains(linkTarget)) {
       return;
