@@ -1,14 +1,5 @@
 {
   "jobs": {
-    "bilibili-bv1ejpwzteah": {
-      "jobId": "bilibili-bv1ejpwzteah",
-      "title": "【医学博士】帮朋友问一下，5cm算短吗？｜如何从小丁丁到大锥锥？！",
-      "videoUrl": "https://www.bilibili.com/video/BV1EJpWzTEAh?vd_source=7e8dddae1b6b42f4a7531543f889ccb7",
-      "transcriptPath": "data/word/bilibili-bv1ejpwzteah.md",
-      "status": "completed",
-      "updatedAt": "2025-09-24T08:29:34.975Z",
-      "author": "未知"
-    },
     "bilibili-bv1c4hdzpebq": {
       "jobId": "bilibili-bv1c4hdzpebq",
       "title": "别得病",
