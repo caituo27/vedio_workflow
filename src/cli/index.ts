@@ -178,26 +178,51 @@ program
 program
     .command("delete")
     .description("删除指定的文字稿及其索引记录")
-    .argument("<video>", "YouTube 链接、哔哩哔哩链接或 BV 号")
+    .argument("<videos>", "视频链接（支持多个，用空格、换行、逗号或分号分隔）")
     .option("-o, --output <dir>", "文字稿输出目录", "docs/data/word")
-    .action(async (videoInput, options) => {
+    .action(async (videosInput, options) => {
         try {
-            const source = parseVideoSource(videoInput as string);
-            const jobId = buildJobId(source);
+            // 解析多个视频链接
+            const videoUrls = parseMultipleVideos(videosInput as string);
+            
+            if (videoUrls.length === 0) {
+                logError("未提供有效的视频链接");
+                process.exitCode = 1;
+                return;
+            }
+
+            success(`共解析到 ${videoUrls.length} 个视频链接`);
 
             const deleteOptions = options.output ? { outputDir: options.output as string } : undefined;
-            const result = await deleteTranscript(jobId, deleteOptions);
+            let successCount = 0;
+            let failCount = 0;
 
-            if (result.deleted) {
-                success(`文字稿删除成功: ${jobId}`);
-                if (result.markdownDeleted) {
-                    success(`  - Markdown 文件已删除`);
+            // 依次删除每个视频
+            for (let i = 0; i < videoUrls.length; i++) {
+                const videoUrl = videoUrls[i]!;
+                
+                try {
+                    const source = parseVideoSource(videoUrl);
+                    const jobId = buildJobId(source);
+                    
+                    const result = await deleteTranscript(jobId, deleteOptions);
+
+                    if (result.deleted) {
+                        success(`[${i + 1}/${videoUrls.length}] 删除成功: ${jobId}`);
+                        successCount++;
+                    } else {
+                        logError(`[${i + 1}/${videoUrls.length}] 未找到文字稿: ${jobId}`);
+                        failCount++;
+                    }
+                } catch (err) {
+                    logError(`[${i + 1}/${videoUrls.length}] 删除失败: ${(err as Error).message}`);
+                    failCount++;
                 }
-                if (result.indexUpdated) {
-                    success(`  - 索引记录已移除`);
-                }
-            } else {
-                logError(`未找到文字稿: ${jobId}`);
+            }
+
+            success(`\n批量删除完成: 成功 ${successCount} 个, 失败 ${failCount} 个`);
+            
+            if (failCount > 0) {
                 process.exitCode = 1;
             }
         } catch (err) {
