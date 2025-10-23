@@ -215,6 +215,15 @@
       "status": "completed",
       "updatedAt": "2025-10-21T02:25:35.288Z",
       "author": "九龙塘右眼财迷"
+    },
+    "bilibili-bv1hphwz3efv": {
+      "jobId": "bilibili-bv1hphwz3efv",
+      "title": "《史蒂夫·乔布斯传》02:苹果创始人，竟然两个都叫史蒂夫？",
+      "videoUrl": "https://www.bilibili.com/video/BV1HpHWz3EFV",
+      "transcriptPath": "data/word/bilibili-bv1hphwz3efv.md",
+      "status": "completed",
+      "updatedAt": "2025-10-23T11:04:15.055Z",
+      "author": "无处安放的小A"
     }
   }
 }
