@@ -21,6 +21,16 @@ export type PipelineOptions = {
     output?: string;
 };
 
+/**
+ * 解析多个视频链接，支持空格、换行、逗号、分号分隔
+ */
+function parseMultipleVideos(input: string): string[] {
+    return input
+        .split(/[\s,;，；\n\r]+/)  // 支持空格、逗号、分号（中英文）、换行符
+        .map(url => url.trim())
+        .filter(url => url.length > 0);
+}
+
 export async function runPipeline(videoInput: string, options: PipelineOptions): Promise<void> {
     const apiKey = options.apiKey ?? process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -121,10 +131,10 @@ program
 program
     .command("generate", { isDefault: true })
     .description("下载视频、调用 Gemini 生成中文文字稿，并发布到 GitHub Pages")
-    .argument("<video>", "YouTube 链接、哔哩哔哩链接或 BV 号")
+    .argument("<videos>", "视频链接（支持多个，用空格、换行、逗号或分号分隔）")
     .option("-k, --api-key <key>", "Gemini API Key (默认读取 GEMINI_API_KEY 环境变量)")
     .option("-o, --output <dir>", "文字稿输出目录", "docs/data/word")
-    .action(async (videoInput, options) => {
+    .action(async (videosInput, options) => {
         try {
             const pipelineOptions: PipelineOptions = {};
             if (options.apiKey) {
@@ -134,7 +144,31 @@ program
                 pipelineOptions.output = options.output as string;
             }
 
-            await runPipeline(videoInput as string, pipelineOptions);
+            // 解析多个视频链接
+            const videoUrls = parseMultipleVideos(videosInput as string);
+            
+            if (videoUrls.length === 0) {
+                logError("未提供有效的视频链接");
+                process.exitCode = 1;
+                return;
+            }
+
+            success(`共解析到 ${videoUrls.length} 个视频链接`);
+
+            // 依次处理每个视频
+            for (let i = 0; i < videoUrls.length; i++) {
+                const videoUrl = videoUrls[i]!;
+                success(`\n[${i + 1}/${videoUrls.length}] 开始处理: ${videoUrl}`);
+                
+                try {
+                    await runPipeline(videoUrl, pipelineOptions);
+                } catch (err) {
+                    logError(`[${i + 1}/${videoUrls.length}] 处理失败: ${(err as Error).message}`);
+                    // 继续处理下一个视频
+                }
+            }
+
+            success(`\n批量处理完成: ${videoUrls.length} 个视频`);
         } catch (err) {
             process.exitCode = 1;
         }

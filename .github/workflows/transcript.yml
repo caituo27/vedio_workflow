@@ -3,8 +3,8 @@ name: Generate transcript
 on:
   workflow_dispatch:
     inputs:
-      video_url:
-        description: "YouTube 链接或哔哩哔哩 BV 号"
+      video_urls:
+        description: "视频链接（支持多个，用空格、换行、逗号或分号分隔）"
         required: true
         type: string
 
@@ -61,7 +61,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          node dist/cli/index.js "${{ inputs.video_url }}"
+          node dist/cli/index.js "${{ inputs.video_urls }}"
 
       - name: Commit generated transcript
         if: always()
