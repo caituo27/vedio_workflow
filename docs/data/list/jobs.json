@@ -242,6 +242,15 @@
       "status": "completed",
       "updatedAt": "2025-10-23T11:22:13.873Z",
       "author": "无处安放的小A"
+    },
+    "bilibili-bv15dh3zceis": {
+      "jobId": "bilibili-bv15dh3zceis",
+      "title": "《史蒂夫·乔布斯传》04:乔布斯找工作有多野？",
+      "videoUrl": "https://www.bilibili.com/video/BV15dH3zcEis/",
+      "transcriptPath": "data/word/bilibili-bv15dh3zceis.md",
+      "status": "completed",
+      "updatedAt": "2025-10-23T11:36:03.890Z",
+      "author": "无处安放的小A"
     }
   }
 }
