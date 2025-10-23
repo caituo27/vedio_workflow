@@ -260,6 +260,15 @@
       "status": "completed",
       "updatedAt": "2025-10-23T11:40:33.591Z",
       "author": "无处安放的小A"
+    },
+    "bilibili-bv1pgsnyheva": {
+      "jobId": "bilibili-bv1pgsnyheva",
+      "title": "《金钱心理学》：4个金钱观念，让你的财务更自由",
+      "videoUrl": "https://www.bilibili.com/video/BV1PgSnYhEva/",
+      "transcriptPath": "data/word/bilibili-bv1pgsnyheva.md",
+      "status": "completed",
+      "updatedAt": "2025-10-23T12:06:02.442Z",
+      "author": "无处安放的小A"
     }
   }
 }
