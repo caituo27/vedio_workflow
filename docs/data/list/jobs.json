@@ -269,6 +269,24 @@
       "status": "completed",
       "updatedAt": "2025-10-23T12:06:02.442Z",
       "author": "无处安放的小A"
+    },
+    "bilibili-bv1tafweue6u": {
+      "jobId": "bilibili-bv1tafweue6u",
+      "title": "《非暴力沟通》01:如何化解沟通产生的冲突？",
+      "videoUrl": "https://www.bilibili.com/video/BV1taFWeuE6u/",
+      "transcriptPath": "data/word/bilibili-bv1tafweue6u.md",
+      "status": "completed",
+      "updatedAt": "2025-10-23T12:39:44.769Z",
+      "author": "无处安放的小A"
+    },
+    "bilibili-bv1l8fue5e1t": {
+      "jobId": "bilibili-bv1l8fue5e1t",
+      "title": "《非暴力沟通》02:一个公式，让你说话永远不得罪人",
+      "videoUrl": "https://www.bilibili.com/video/BV1L8Fue5E1T/",
+      "transcriptPath": "data/word/bilibili-bv1l8fue5e1t.md",
+      "status": "completed",
+      "updatedAt": "2025-10-23T12:40:15.754Z",
+      "author": "无处安放的小A"
     }
   }
 }
