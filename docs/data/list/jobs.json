@@ -251,6 +251,15 @@
       "status": "completed",
       "updatedAt": "2025-10-23T11:36:03.890Z",
       "author": "无处安放的小A"
+    },
+    "bilibili-bv1zqxkzwecw": {
+      "jobId": "bilibili-bv1zqxkzwecw",
+      "title": "《史蒂夫·乔布斯传》06:苹果公司消失的第三人",
+      "videoUrl": "https://www.bilibili.com/video/BV1ZQxKzwEcW/",
+      "transcriptPath": "data/word/bilibili-bv1zqxkzwecw.md",
+      "status": "completed",
+      "updatedAt": "2025-10-23T11:40:33.591Z",
+      "author": "无处安放的小A"
     }
   }
 }
