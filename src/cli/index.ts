@@ -14,6 +14,7 @@ import {
     updateJob,
 } from "../deliver/status_manager.js";
 import type { JobRecord } from "../deliver/status_manager.js";
+import { deleteTranscript } from "../deliver/transcript_deleter.js";
 
 export type PipelineOptions = {
     apiKey?: string;
@@ -113,7 +114,13 @@ const program = new Command();
 
 program
     .name("vedio-workflow")
-    .description("下载视频、调用 Gemini 生成中文文字稿，并发布到 GitHub Pages。")
+    .description("视频文字稿生成与管理工具")
+    .version("1.0.0");
+
+// 生成文字稿命令（默认命令）
+program
+    .command("generate", { isDefault: true })
+    .description("下载视频、调用 Gemini 生成中文文字稿，并发布到 GitHub Pages")
     .argument("<video>", "YouTube 链接、哔哩哔哩链接或 BV 号")
     .option("-k, --api-key <key>", "Gemini API Key (默认读取 GEMINI_API_KEY 环境变量)")
     .option("-o, --output <dir>", "文字稿输出目录", "docs/data/word")
@@ -129,6 +136,38 @@ program
 
             await runPipeline(videoInput as string, pipelineOptions);
         } catch (err) {
+            process.exitCode = 1;
+        }
+    });
+
+// 删除文字稿命令
+program
+    .command("delete")
+    .description("删除指定的文字稿及其索引记录")
+    .argument("<video>", "YouTube 链接、哔哩哔哩链接或 BV 号")
+    .option("-o, --output <dir>", "文字稿输出目录", "docs/data/word")
+    .action(async (videoInput, options) => {
+        try {
+            const source = parseVideoSource(videoInput as string);
+            const jobId = buildJobId(source);
+
+            const deleteOptions = options.output ? { outputDir: options.output as string } : undefined;
+            const result = await deleteTranscript(jobId, deleteOptions);
+
+            if (result.deleted) {
+                success(`文字稿删除成功: ${jobId}`);
+                if (result.markdownDeleted) {
+                    success(`  - Markdown 文件已删除`);
+                }
+                if (result.indexUpdated) {
+                    success(`  - 索引记录已移除`);
+                }
+            } else {
+                logError(`未找到文字稿: ${jobId}`);
+                process.exitCode = 1;
+            }
+        } catch (err) {
+            logError(`删除失败: ${(err as Error).message}`);
             process.exitCode = 1;
         }
     });
