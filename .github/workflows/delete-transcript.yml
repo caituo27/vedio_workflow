@@ -3,8 +3,8 @@ name: Delete transcript
 on:
   workflow_dispatch:
     inputs:
-      video_url:
-        description: "YouTube 链接或哔哩哔哩 BV 号"
+      video_urls:
+        description: "视频链接（支持多个，用空格、换行、逗号或分号分隔）"
         required: true
         type: string
 
@@ -33,8 +33,9 @@ jobs:
         run: npm run build
 
       - name: Delete transcript
+        continue-on-error: true
         run: |
-          node dist/cli/index.js delete "${{ inputs.video_url }}"
+          node dist/cli/index.js delete "${{ inputs.video_urls }}"
 
       - name: Commit deletion
         if: always()
@@ -59,7 +60,7 @@ jobs:
   deploy:
     needs: delete-transcript
     runs-on: ubuntu-latest
-    if: needs.delete-transcript.result == 'success'
+    if: always()
     permissions:
       pages: write
       id-token: write
