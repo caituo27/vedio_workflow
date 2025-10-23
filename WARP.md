@@ -19,6 +19,8 @@ DEV_VIDEO="https://youtu.be/xxxx" GEMINI_API_KEY="your-key" npm run dev
 
 # Run CLI after building
 node dist/cli/index.js "<video-url>"
+node dist/cli/index.js generate "<video-url>"  # Explicit generate command
+node dist/cli/index.js delete "<video-url>"   # Delete transcript
 
 # Lint (placeholder for future Python pipeline)
 npm run lint
@@ -47,6 +49,7 @@ The codebase follows a three-stage pipeline architecture:
 3. **Deliver** (`src/deliver/`): Publishes results and manages state
    - `markdown_writer.ts` generates transcript Markdown files in `docs/data/word/`
    - `status_manager.ts` maintains job status in `docs/data/list/jobs.json`
+   - `transcript_deleter.ts` handles transcript deletion (both file and index)
    - Failed jobs are automatically filtered from the index
 
 ### Entry Points
